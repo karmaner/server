@@ -1,0 +1,21 @@
+# ========================
+# 基础配置
+# ========================
+Language: Cpp
+BasedOnStyle: Google
+
+IndentWidth: 2
+ColumnLimit: 80
+
+# 指针 & 引用风格
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# 构造函数初始化列表
+BreakConstructorInitializers: AfterColon
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+
+# 函数参数换行风格
+AllowAllParametersOfDeclarationOnNextLine: false
+BinPackParameters: false
+BinPackArguments: false
