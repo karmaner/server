@@ -1,6 +1,10 @@
 #include "basic/log.h"
 
 #include <ctime>
+#include <ostream>
+#include <sstream>
+#include <string>
+#include <functional>
 
 /*========================= LogLevel ========================*/
 
@@ -121,7 +125,7 @@ public:
 
 class DateTimeFormatItem : public LogFormat::FormatItem {
 public:
-  DateTimeFormatItem(const std::string &fmt = "%Y-%m-%d %H:%M:%S")
+  DateTimeFormatItem(const std::string& fmt = "%Y-%m-%d %H:%M:%S")
     : m_fmt(fmt) {}
   void format(std::ostream &os, LogEvent::ptr event) override {
     std::time_t t = event->getTime();
@@ -138,6 +142,7 @@ private:
 
 class ThreadIdFormatItem : public LogFormat::FormatItem {
 public:
+  ThreadIdFormatItem(const std::string& str = "") {}
   void format(std::ostream &os, LogEvent::ptr event) override {
     os << event->getThreadId();
   }
@@ -145,6 +150,7 @@ public:
 
 class ThreadNameFormatItem : public LogFormat::FormatItem {
 public:
+  ThreadNameFormatItem(const std::string& str = "") {}
   void format(std::ostream &os, LogEvent::ptr event) override {
     os << event->getThreadName();
   }
@@ -152,6 +158,7 @@ public:
 
 class FiberIdFormatItem : public LogFormat::FormatItem {
 public:
+  FiberIdFormatItem(const std::string& str = "") {}
   void format(std::ostream &os, LogEvent::ptr event) override {
     os << event->getFiberId();
   }
@@ -159,6 +166,7 @@ public:
 
 class MessageFormatItem : public LogFormat::FormatItem {
 public:
+  MessageFormatItem(const std::string& str = "") {}
   void format(std::ostream &os, LogEvent::ptr event) override {
     os << event->getContent();
   }
@@ -166,6 +174,7 @@ public:
 
 class NewLineFormatItem : public LogFormat::FormatItem {
 public:
+  NewLineFormatItem(const std::string& str = "") {}
   void format(std::ostream &os, LogEvent::ptr event) override {
     os << "\n";
   }
@@ -173,6 +182,7 @@ public:
 
 class TabFormatItem : public LogFormat::FormatItem {
 public:
+  TabFormatItem(const std::string& str = "") {}
   void format(std::ostream &os, LogEvent::ptr event) override {
     os << "\t";
   }
@@ -180,65 +190,121 @@ public:
 
 class LogNameFormatItem : public LogFormat::FormatItem {
 public:
-  void format(std::ostream &os, LogEvent::ptr event) override {
+  LogNameFormatItem(const std::string& str = "") {}
+  void format(std::ostream& os, LogEvent::ptr event) override {
     os << event->getLogName();
   }
 };
 
-const std::unordered_map<std::string, std::function<LogFormat::FormatItem::ptr()>>& LogFormat::getFormatMaps() {
-  static const std::unordered_map<std::string, std::function<LogFormat::FormatItem::ptr()>> s_format_items = {
-  {"m", [](){ return LogFormat::FormatItem::ptr(new MessageFormatItem()); }},    // 消息内容
-  {"p", [](){ return LogFormat::FormatItem::ptr(new LevelFormatItem()); }},      // 日志级别
-  {"r", [](){ return LogFormat::FormatItem::ptr(new ElapseFormatItem()); }},     // 累计耗时（毫秒）
-  {"c", [](){ return LogFormat::FormatItem::ptr(new LogNameFormatItem()); }},    // 日志器名称
-  {"t", [](){ return LogFormat::FormatItem::ptr(new ThreadIdFormatItem()); }},   // 线程ID
-  {"F", [](){ return LogFormat::FormatItem::ptr(new FiberIdFormatItem()); }},    // 协程ID
-  {"n", [](){ return LogFormat::FormatItem::ptr(new NewLineFormatItem()); }},    // 换行符
-  {"d", [](){ return LogFormat::FormatItem::ptr(new DateTimeFormatItem()); }},   // 日期时间
-  {"f", [](){ return LogFormat::FormatItem::ptr(new FileNameFormatItem()); }},   // 文件名
-  {"l", [](){ return LogFormat::FormatItem::ptr(new LineFormatItem()); }},       // 行号
-  {"N", [](){ return LogFormat::FormatItem::ptr(new ThreadNameFormatItem()); }},// 线程名称
-  {"T", [](){ return LogFormat::FormatItem::ptr(new TabFormatItem()); }}        // 制表符
+class StringFormatItem : public LogFormat::FormatItem {
+public:
+  StringFormatItem(const std::string& str): m_string(str) {}
+  void format(std::ostream& os, LogEvent::ptr event) override {
+    os << m_string;
+  }
+private:
+  std::string m_string;
 };
-
-  return s_format_items;
-}
 
 // TODO: 需要解析的格式未
 // "%d{%Y-%m-%d %H:%M:%S} [%p] [%N:%t] [F:%F] %c %f:%l >> %m%n"
 void LogFormat::init() {
+
   if (m_pattern.empty()) {
     m_error = true;
     return;
   }
 
+  struct PatternToken {
+    std::string type;
+    std::string fmt;
+    std::string text;
+  };
+
+  std::vector<PatternToken> tokens;
+  std::string_view pattern(m_pattern);
   std::string tmp;
-  // 存储解析结果 （type, format, string)
-  std::vector<std::tuple<std::string, std::string, std::string> > patterns;
+  tmp.reserve(pattern.size());
+
   for (size_t i = 0; i < m_pattern.size(); ++i) {
-    if (m_pattern[i] != '%') {
-      tmp += m_pattern[i];
+    char ch = pattern[i];
+    if (ch != '%') {
+      tmp.push_back(ch);
       continue;
     }
 
     if (!tmp.empty()) {
-      patterns.push_back(std::make_tuple("", "", tmp));
+      tokens.push_back({"", "", std::move(tmp)});
       tmp.clear();
     }
 
-    char c = m_pattern[i];
+    // 检查边界
+    if (i + 1 >= m_pattern.size()) {
+      m_error = true;
+      return;
+    }
+
+    char type = m_pattern[++i];
     std::string fmt;
 
+    // 解析 %d{...} 格式
     if (i + 1 < m_pattern.size() && m_pattern[i + 1] == '{') {
-      size_t j = i + 2;
-      while (j < m_pattern.size() && m_pattern[j] != '}') {
-        fmt += m_pattern[j];
-        ++j;
+      size_t start = i + 2;
+      size_t end = pattern.find('}', start);
+      if (end == std::string::npos) {
+        m_error = true;
+        break;
       }
-      if (j < m_pattern.size()) {
-        i = j;  // 跳过 '}'
-      }
+
+      fmt = std::string(pattern.substr(start, end - start));
+      i = end; // 跳过 '}'
     }
+
+    tokens.push_back({std::string(1, type), fmt, ""});
   }
 
+  if (!tmp.empty()) tokens.push_back({"", "", std::move(tmp)});
+
+    static const std::unordered_map<std::string, std::function<FormatItem::ptr(const std::string&)>> s_items = {
+      {"m", [](auto& f){ return std::make_shared<MessageFormatItem>(); }},
+      {"p", [](auto& f){ return std::make_shared<LevelFormatItem>(); }},
+      {"c", [](auto& f){ return std::make_shared<LogNameFormatItem>(); }},
+      {"t", [](auto& f){ return std::make_shared<ThreadIdFormatItem>(); }},
+      {"N", [](auto& f){ return std::make_shared<ThreadNameFormatItem>(); }},
+      {"d", [](auto& f){ return std::make_shared<DateTimeFormatItem>(f.empty() ? "%Y-%m-%d %H:%M:%S" : f); }},
+      {"f", [](auto& f){ return std::make_shared<FileNameFormatItem>(); }},
+      {"l", [](auto& f){ return std::make_shared<LineFormatItem>(); }},
+      {"F", [](auto& f){ return std::make_shared<FiberIdFormatItem>(); }},
+      {"n", [](auto& f){ return std::make_shared<NewLineFormatItem>(); }},
+      {"T", [](auto& f){ return std::make_shared<TabFormatItem>(); }},
+    };
+
+  for (auto& tk : tokens) {
+    if (!tk.type.empty()) {
+      auto it = s_items.find(tk.type);
+      if (it != s_items.end()) {
+        m_items.push_back(it->second(tk.fmt));
+      } else {
+        m_items.push_back(std::make_shared<StringFormatItem>("<<error %" + tk.type + ">>"));
+        m_error = true;
+      }
+    } else {
+      m_items.push_back(std::make_shared<StringFormatItem>(tk.text));
+    }
+  }
+}
+
+std::ostream& LogFormat::format(std::ostream& os, LogEvent::ptr event) {
+  for (auto& i : m_items) {
+    i->format(os, event);
+  }
+  return os;
+}
+
+std::string LogFormat::format(LogEvent::ptr event) {
+  std::stringstream ss;
+  for (auto& i : m_items) {
+    i->format(ss, event);
+  }
+  return ss.str();
 }

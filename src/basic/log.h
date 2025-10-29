@@ -3,11 +3,12 @@
 #include <stdint.h>
 
 #include <memory>
+#include <ostream>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <functional>
+
 
 class Log;
 
@@ -63,6 +64,8 @@ public:
   std::string getContent() const { return m_ss.str(); }
 
   void log();
+  void format(const char* fmt, ...);
+  void format(const char* fmt, va_list al);
 
 private:
   uint64_t m_time = 0;                             ///< 时间戳
@@ -111,12 +114,13 @@ public:
     virtual ~FormatItem() {}
     virtual void format(std::ostream& os, LogEvent::ptr event) = 0;
   };
-public:
-  static const std::unordered_map<std::string, std::function<FormatItem::ptr()>>& getFormatMaps();
+
 public:
   void init();
   bool isError() const { return m_error; }
 
+  virtual std::ostream& format(std::ostream& os, LogEvent::ptr event);
+  virtual std::string format(LogEvent::ptr event);
 private:
   std::string m_pattern;
   std::vector<FormatItem::ptr> m_items;
