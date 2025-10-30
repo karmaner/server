@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <list>
 
 
 class Log;
@@ -137,7 +138,7 @@ public:
 
   virtual ~LogAppender() {}
   virtual void log(
-    std::shared_ptr<Log> logger,
+    std::shared_ptr<Log> log,
     LogLevel::Level level,
     LogEvent::ptr event) = 0;
 
@@ -154,24 +155,38 @@ protected:
   Lock m_lock;
 };
 
-class Log {
+class Log : public std::enable_shared_from_this<Log> {
 public:
   typedef std::shared_ptr<Log> ptr;
+  typedef int Lock;
 
   Log(const std::string& name);
 
   LogLevel::Level getLevel() const { return m_level; };
   const std::string& getName() const { return m_name; }
-  void addAppender();
+  void addAppender(LogAppender::ptr val);
   void delAppender(LogAppender::ptr val);
   void clearAppender();
 
-  void log(LogEvent::ptr e);
+  LogFormat::ptr getFormat();
+  void setFormat(LogFormat::ptr format);
+
+  void log(LogLevel::Level level, LogEvent::ptr e);
+
+  void trace(LogEvent::ptr event);
+  void debug(LogEvent::ptr event);
+  void info(LogEvent::ptr event);
+  void warn(LogEvent::ptr event);
+  void error(LogEvent::ptr event);
+  void fatal(LogEvent::ptr event);
 
 private:
   std::string m_name;
-  std::vector<LogAppender::ptr> m_appenders;
+  std::list<LogAppender::ptr> m_appenders;
+  LogFormat::ptr m_formatter;
   LogLevel::Level m_level = LogLevel::INFO;
+  Log::ptr m_root;
+  Lock m_lock;
 };
 
 class LogManager {
@@ -182,4 +197,18 @@ public:
 private:
   static Log::ptr m_root;
   std::unordered_map<std::string, Log::ptr> logs;
+};
+
+class StdoutAppender : public LogAppender {
+public:
+  typedef std::shared_ptr<StdoutAppender> ptr;
+
+  StdoutAppender(LogLevel::Level level);
+
+private:
+  LogLevel::Level m_level = LogLevel::INFO;
+};
+
+class FileAppender : public LogAppender {
+
 };

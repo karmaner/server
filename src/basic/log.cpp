@@ -1,4 +1,5 @@
 #include "basic/log.h"
+#include <pthread.h>
 
 #include <ctime>
 #include <ostream>
@@ -71,7 +72,7 @@ LogEvent::LogEvent(std::shared_ptr<Log> log,
 
 void LogEvent::log() {
   if (m_level >= m_log->getLevel()) {
-    m_log->log(shared_from_this());
+    m_log->log(m_level, shared_from_this());
   }
 }
 
@@ -308,3 +309,96 @@ std::string LogFormat::format(LogEvent::ptr event) {
   }
   return ss.str();
 }
+
+
+/*========================= LogAppender ========================*/
+
+LogFormat::ptr LogAppender::getFormatter() {
+  if (!m_hasFormatter) {
+    return nullptr;
+  }
+  return m_formatter;
+}
+
+void LogAppender::setFormatter(LogFormat::ptr val) {
+  // MutexType::Lock lock(m_mutex);
+  m_formatter = val;
+  if(m_formatter) {
+    m_hasFormatter = true;
+  } else {
+    m_hasFormatter = false;
+  }
+}
+
+
+/*========================= Log ========================*/
+
+Log::Log(const std::string& name)
+  : m_name(name)
+  , m_level(LogLevel::DEBUG) {
+  
+  m_formatter.reset(new LogFormat("%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T%F%T[%p]%T[%c]%T%f:%l%T%m%n"));
+}
+
+void Log::addAppender(LogAppender::ptr val) {
+  if (val) {
+    // m_lock;
+    m_appenders.push_back(val);
+  }
+}
+
+void Log::delAppender(LogAppender::ptr val) {
+  //  MutexType::Lock lock(m_mutex);
+  for (auto it = m_appenders.begin(); it != m_appenders.end(); ++it) {
+    if (*it == val) {
+      m_appenders.erase(it);
+      break;
+    }
+  }
+}
+
+void Log::clearAppender() {
+  // MutexType::Lock lock(m_mutex);
+  m_appenders.clear();
+}
+
+void Log::log(LogLevel::Level level, LogEvent::ptr e) {
+  if (level > m_level) {
+    auto self = shared_from_this();
+    // MutexType::Lock lock(m_mutex);
+    if(!m_appenders.empty()) {
+      for(auto& i : m_appenders) {
+        i->log(self, level, e);
+      }
+    } else if(m_root) {
+      m_root->log(level, e);
+    }
+  }
+}
+
+void Log::trace(LogEvent::ptr event) {
+  log(LogLevel::TRACE, event);
+}
+
+void Log::debug(LogEvent::ptr event) {
+  log(LogLevel::DEBUG, event);
+}
+
+void Log::info(LogEvent::ptr event) {
+  log(LogLevel::INFO, event);
+}
+
+void Log::warn(LogEvent::ptr event) {
+  log(LogLevel::WARN, event);
+}
+
+void Log::error(LogEvent::ptr event) {
+  log(LogLevel::ERROR, event);
+}
+
+void Log::fatal(LogEvent::ptr event) {
+  log(LogLevel::FATAL, event);
+}
+
+/*========================= LogManager ========================*/
+
