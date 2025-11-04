@@ -2,10 +2,13 @@
 #include <pthread.h>
 
 #include <ctime>
+#include <memory>
 #include <ostream>
 #include <sstream>
+#include <iostream>
 #include <string>
 #include <functional>
+#include <cstdarg>
 
 /*========================= LogLevel ========================*/
 
@@ -73,6 +76,22 @@ LogEvent::LogEvent(std::shared_ptr<Log> log,
 void LogEvent::log() {
   if (m_level >= m_log->getLevel()) {
     m_log->log(m_level, shared_from_this());
+  }
+}
+
+void LogEvent::format(const char* fmt, ...) {
+  va_list al;
+  va_start(al, fmt);
+  format(fmt, al);
+  va_end(al);
+}
+
+void LogEvent::format(const char* fmt, va_list al) {
+  char* buf = nullptr;
+  int len = vasprintf(&buf, fmt, al);
+  if (len != -1) {
+    m_ss << std::string(buf, len);
+    free(buf);
   }
 }
 
@@ -401,4 +420,66 @@ void Log::fatal(LogEvent::ptr event) {
 }
 
 /*========================= LogManager ========================*/
+
+LogManager::LogManager() {
+  m_root.reset(new Log("root"));
+  m_root->addAppender(LogAppender::ptr(new StdoutAppender()));
+
+  m_logs[m_root->getName()] = m_root;
+  
+}
+
+Log::ptr LogManager::getRoot() {
+  if (!m_root) {
+    m_root = std::make_shared<Log>("root");
+  }
+  return m_root;
+}
+
+Log::ptr LogManager::getLog(const std::string& name) {
+  auto it = m_logs.find(name);
+  if (it == m_logs.end()) {
+    m_logs[name] = std::make_shared<Log>(name);
+  }
+  return m_logs[name];
+}
+
+/*========================= StdoutAppender ========================*/
+
+void StdoutAppender::log(std::shared_ptr<Log> log, LogLevel::Level level, LogEvent::ptr event) {
+  if (level >= m_level) {
+    m_formatter->format(std::cout, event);
+  }
+}
+
+/*========================= FileAppender ========================*/
+
+FileAppender::FileAppender(const std::string& name): m_filename(name) {
+  m_lastTime = 0;
+  reopen();
+}
+
+bool FileAppender::reopen() {
+  if (m_filestream) {
+    m_filestream.close();
+  }
+
+  m_filestream.open(m_filename, std::ios::app);
+  if (!m_filestream.is_open()) {
+    return false;
+  }
+
+  return true;
+}
+void FileAppender::log(std::shared_ptr<Log> log, LogLevel::Level level, LogEvent::ptr event) {
+  if (level >= m_level) {
+    if (reopen()) {
+      m_formatter->format(m_filestream, event);
+    } else {
+      std::cerr << "log file opne failed: " << m_filename << std::endl;
+    }
+  }
+}
+
+/*========================= NetAppender ========================*/
 

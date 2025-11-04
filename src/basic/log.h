@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
+#include <fstream>
 #include <memory>
 #include <ostream>
 #include <sstream>
@@ -10,6 +11,7 @@
 #include <vector>
 #include <list>
 
+#include "basic/singletion.h"
 
 class Log;
 
@@ -191,24 +193,99 @@ private:
 
 class LogManager {
 public:
+  LogManager();
+
   Log::ptr getRoot();
   Log::ptr getLog(const std::string& name);
 
+
+
 private:
-  static Log::ptr m_root;
-  std::unordered_map<std::string, Log::ptr> logs;
+  Log::ptr m_root;
+  std::unordered_map<std::string, Log::ptr> m_logs;
 };
 
 class StdoutAppender : public LogAppender {
 public:
   typedef std::shared_ptr<StdoutAppender> ptr;
 
-  StdoutAppender(LogLevel::Level level);
-
-private:
-  LogLevel::Level m_level = LogLevel::INFO;
+  void log(
+    std::shared_ptr<Log> log,
+    LogLevel::Level level,
+    LogEvent::ptr event)  override;
 };
 
 class FileAppender : public LogAppender {
+public:
+  typedef std::shared_ptr<FileAppender> ptr;
 
+  FileAppender(const std::string& name);
+
+  void log(
+  std::shared_ptr<Log> log,
+  LogLevel::Level level,
+  LogEvent::ptr event)  override;
+
+  bool reopen();
+
+private:
+  std::string m_filename;
+  std::ofstream m_filestream;
+  uint64_t m_lastTime = 0;
+  int m_size = 0;
 };
+
+// 网络的Socket待实现
+class NetAppender : public LogAppender {
+
+private:
+};
+
+
+typedef Singleton<LogManager> LogMgr;
+
+
+#define LOG_ROOT LogMgr::GetInstance()->getRoot()
+#define LOG_NAME(name) LogMgr::GetInstance()->getLog(name)
+
+#define LOG_LEVEL_STREAM(log, level) \
+  if (level>=log->getLevel()) \
+    LogEventWrap(LogEvent::ptr(new LogEvent( \
+      log, \
+      level, \
+      __FILE__, \
+      __LINE__, \
+      0, \
+      0, \
+      0, \
+      "thread_name" \
+    )))->getSS()
+
+#define LOG_LEVEL_FMT(log, level, fmt, ...) \
+  if (level>=log->getLevel()) \
+    LogEventWrap(LogEvent::ptr(new LogEvent( \
+      log, \
+      level, \
+      __FILE__, \
+      __LINE__, \
+      0, \
+      0, \
+      0, \
+      "thread_name" \
+    ))).getEvent()->format(fmt, __VA_ARGS__)
+
+
+#define LOG_TRACE(fmt, ...) LOG_LEVEL_FMT(LOG_ROOT, LogLevel::TRACE, fmt, __VA_ARGS__)
+#define LOG_DEBUG(fmt, ...) LOG_LEVEL_FMT(LOG_ROOT, LogLevel::DEBUG, fmt, __VA_ARGS__)
+#define LOG_INFO(fmt, ...)  LOG_LEVEL_FMT(LOG_ROOT, LogLevel::INFO, fmt, __VA_ARGS__)
+#define LOG_WARN(fmt, ...)  LOG_LEVEL_FMT(LOG_ROOT, LogLevel::WARN, fmt, __VA_ARGS__)
+#define LOG_ERROR(fmt, ...) LOG_LEVEL_FMT(LOG_ROOT, LogLevel::ERROR, fmt, __VA_ARGS__)
+#define LOG_FATAL(fmt, ...) LOG_LEVEL_FMT(LOG_ROOT, LogLevel::FATAL, fmt, __VA_ARGS__)
+
+
+#define LOG_TRACE_STREAM LOG_LEVEL(LOG_ROOT, LogLevel::TRACE)
+#define LOG_DEBUG_STREAM LOG_LEVEL(LOG_ROOT, LogLevel::DEBUG)
+#define LOG_INFO_STREAM  LOG_LEVEL(LOG_ROOT, LogLevel::INFO)
+#define LOG_WARN_STREAM  LOG_LEVEL(LOG_ROOT, LogLevel::WARN)
+#define LOG_ERROR_STREAM LOG_LEVEL(LOG_ROOT, LogLevel::ERROR)
+#define LOG_FATAL_STREAM LOG_LEVEL(LOG_ROOT, LogLevel::FATAL)
