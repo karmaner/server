@@ -1,21 +1,62 @@
-# ========================
 # 基础配置
-# ========================
 Language: Cpp
 BasedOnStyle: Google
 
-IndentWidth: 2
-ColumnLimit: 80
-
-# 指针 & 引用风格
+# 指针和引用对齐
+DerivePointerAlignment: false
 PointerAlignment: Left
-ReferenceAlignment: Left
 
-# 构造函数初始化列表
-BreakConstructorInitializers: AfterColon
-ConstructorInitializerAllOnOneLineOrOnePerLine: true
+# 缩进设置
+AccessModifierOffset: -2
+IndentWidth: 2
+UseTab: Never
+TabWidth: 2
+ColumnLimit: 100
 
-# 函数参数换行风格
-AllowAllParametersOfDeclarationOnNextLine: false
-BinPackParameters: false
-BinPackArguments: false
+# 大括号样式
+BreakBeforeBraces: Custom
+BraceWrapping:
+  # 数据结构
+  AfterClass: false
+  AfterStruct: false
+  AfterEnum: false
+  AfterUnion: false
+  AfterNamespace: false
+  AfterFunction: false
+  AfterObjCDeclaration: false
+  
+  AfterControlStatement: false
+  BeforeCatch: false
+  BeforeElse: false
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+
+# 空格设置
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesInAngles: false
+SpacesInConditionalStatement: false
+SpacesInContainerLiterals: false
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+
+# 对齐设置
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+AlignEscapedNewlines: Left
+AlignOperands: true
+AlignTrailingComments: true
+
+# 换行设置
+AllowShortBlocksOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+BinPackArguments: true
+BinPackParameters: true
+
+# 包含文件排序
+SortIncludes: CaseSensitive
+SortUsingDeclarations: true

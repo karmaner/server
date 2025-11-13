@@ -7,7 +7,7 @@ int set_thread_name(const char* name) {
   return prctl(PR_SET_NAME, name);
 }
 
-const char* get_thread_name() {
+const char *get_thread_name() {
   static char thread_name[16] = {0};
 
   if (prctl(PR_GET_NAME, thread_name) != 0) {

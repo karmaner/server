@@ -4,6 +4,9 @@ project(server LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_compile_options(-fstandalone-debug)
+message(STATUS "optional: -fstandalone-debug")
+
 include_directories(src)
 
 set(BIN_DIR ${CMAKE_SOURCE_DIR}/bin)

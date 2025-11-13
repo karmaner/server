@@ -3,12 +3,15 @@
 
 ## basic
 ### 日志模块
-      LogEvent
-        |
-       \/
-      Log
-      
+
+基础用法
+LOG_XXX(fmt, ...);
+LOG_XXX_STREAM << "thing" << std::endl; // YES it is a ostream!
+
 ### 配置模块
+配置文件 yaml
+使用解析模块
+
 ### 线程模块
 ### 协程模块
 ### 协程调度模块
