@@ -1,4 +1,9 @@
-include_directories(src)
+
+include_directories(
+  ${CMAKE_SOURCE_DIR}/src
+  ${CMAKE_SOURCE_DIR}/3rd/yaml-cpp/src
+  ${CMAKE_SOURCE_DIR}/include
+)
 
 file(GLOB_RECURSE TEST_FILES "*.cpp" "*.c")
 

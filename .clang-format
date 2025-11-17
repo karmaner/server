@@ -50,9 +50,9 @@ AlignOperands: true
 AlignTrailingComments: true
 
 # 换行设置
-AllowShortBlocksOnASingleLine: false
+AllowShortBlocksOnASingleLine: true
 AllowShortFunctionsOnASingleLine: Inline
-AllowShortIfStatementsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: true
 AllowShortLoopsOnASingleLine: false
 BinPackArguments: true
 BinPackParameters: true

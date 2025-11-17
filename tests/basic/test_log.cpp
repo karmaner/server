@@ -1,3 +1,5 @@
+#include <string>
+
 #include "basic/log.h"
 
 using namespace Basic;
