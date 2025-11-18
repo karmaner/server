@@ -57,7 +57,8 @@ static std::map<std::string, uint64_t> s_file2modifytime;
 void Config::LoadFromDir(const std::string& path, bool force) {
   std::string              absoulte_path = "./config";
   std::vector<std::string> files;
-  // FSUtil::ListAllFile(files, absoulte_path, ".yml");
+  // FSUtil::ListAllFile(files, absoulte_path, ".yaml");
+  files.push_back("/home/abc/server/bin/config/log.yaml");
 
   for (auto& i : files) {
     {
@@ -75,7 +76,7 @@ void Config::LoadFromDir(const std::string& path, bool force) {
 }
 
 void Config::Visit(std::function<void(ConfigVarBase::ptr)> cb) {
-  ConfigVarMap&         m = GetDatas();
+  ConfigVarMap& m = GetDatas();
   for (auto it = m.begin(); it != m.end(); ++it) {
     cb(it->second);
   }

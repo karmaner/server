@@ -19,8 +19,6 @@
 
 #include "basic/log.h"
 #include "utils/type_util.h"
-#include "yaml-cpp/node/parse.h"
-#include "yaml-cpp/node/type.h"
 
 namespace Basic {
 
@@ -109,7 +107,7 @@ T lexical_cast(const S& v) {
 }
 
 template <class T>
-class LexicalCast<std::string, std::vector<T> > {
+class LexicalCast<std::string, std::vector<T>> {
 public:
   std::vector<T> operator()(const std::string& v) {
     YAML::Node              node = YAML::Load(v);
@@ -139,12 +137,12 @@ public:
 };
 
 template <class T>
-class LexicalCast<std::string, std::list<T> > {
+class LexicalCast<std::string, std::list<T>> {
 public:
-  std::vector<T> operator()(const std::string& v) {
-    YAML::Node              node = YAML::Load(v);
-    typename std::vector<T> vec;
-    std::stringstream       ss;
+  std::list<T> operator()(const std::string& v) {
+    YAML::Node            node = YAML::Load(v);
+    typename std::list<T> vec;
+    std::stringstream     ss;
     for (size_t i = 0; i < node.size(); ++i) {
       ss.str("");
       ss << node[i];
@@ -168,16 +166,18 @@ public:
 };
 
 template <class T>
-class LexicalCast<std::string, std::set<T> > {
+class LexicalCast<std::string, std::set<T>> {
 public:
-  std::string operator()(const std::set<T>& v) {
-    YAML::Node node(YAML::NodeType::Sequence);
-    for (auto& i : v) {
-      node.push_back(YAML::Load(LexicalCast<T, std::string>()(i)));
+  std::set<T> operator()(const std::string& v) {
+    YAML::Node           node = YAML::Load(v);
+    typename std::set<T> vec;
+    std::stringstream    ss;
+    for (size_t i = 0; i < node.size(); ++i) {
+      ss.str("");
+      ss << node[i];
+      vec.insert(LexicalCast<std::string, T>()(ss.str()));
     }
-    std::stringstream ss;
-    ss << node;
-    return ss.str();
+    return vec;
   }
 };
 
@@ -196,7 +196,7 @@ public:
 };
 
 template <class T>
-class LexicalCast<std::string, std::unordered_set<T> > {
+class LexicalCast<std::string, std::unordered_set<T>> {
 public:
   std::unordered_set<T> operator()(const std::string& v) {
     YAML::Node                     node = YAML::Load(v);
@@ -226,7 +226,7 @@ public:
 };
 
 template <class T>
-class LexicalCast<std::string, std::map<std::string, T> > {
+class LexicalCast<std::string, std::map<std::string, T>> {
 public:
   std::map<std::string, T> operator()(const std::string& v) {
     YAML::Node                        node = YAML::Load(v);
@@ -256,7 +256,7 @@ public:
 };
 
 template <class T>
-class LexicalCast<std::string, std::unordered_map<std::string, T> > {
+class LexicalCast<std::string, std::unordered_map<std::string, T>> {
 public:
   std::unordered_map<std::string, T> operator()(const std::string& v) {
     YAML::Node                                  node = YAML::Load(v);
@@ -285,7 +285,7 @@ public:
 };
 
 template <class T, class FromStr = LexicalCast<std::string, T>,
-          class ToStr = LexicalCast<T, std::string> >
+          class ToStr = LexicalCast<T, std::string>>
 class ConfigVar : public ConfigVarBase {
 public:
   typedef std::shared_ptr<ConfigVar>                                  ptr;
@@ -367,7 +367,7 @@ public:
                                            const std::string& desc = "") {
     auto it = GetDatas().find(name);
     if (it != GetDatas().end()) {
-      auto tmp = std::dynamic_pointer_cast<ConfigVar<T> >(it->second);
+      auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
       if (tmp) {
         LOG_INFO("Lookup name=%s exists;", name.c_str());
         return tmp;
@@ -392,7 +392,7 @@ public:
   static typename ConfigVar<T>::ptr Lookup(const std::string& name) {
     auto it = GetDatas().find(name);
     if (it == GetDatas().end()) { return nullptr; }
-    return std::dynamic_pointer_cast<ConfigVar<T> >(it->second);
+    return std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
   }
 
   static ConfigVarBase::ptr LookupBase(const std::string& name);

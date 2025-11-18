@@ -3,6 +3,7 @@
 #include <map>
 
 #include "basic/config.h"
+#include "basic/log.h"
 #include "utils/type_util.h"
 
 using namespace Basic;
@@ -242,10 +243,58 @@ void test_yaml() {
   std::cout << "\nYAML config test completed!" << std::endl;
 }
 
+void test_log_file_config() {
+  // 测试加载文件
+  std::cout << "=== Testing log config file loading ===" << std::endl;
+
+  // 假设有一个配置文件 log.yaml
+  Config::LoadFromDir("", true);
+
+  // 获取当前的日志配置
+  ConfigVar<std::set<LogDefine>>::ptr logs        = Config::Lookup<std::set<LogDefine>>("logs");
+  auto                                log_defines = logs->getValue();
+  std::cout << "Loaded " << log_defines.size() << " log from config file" << std::endl;
+
+  for (const auto& log_define : log_defines) {
+    std::cout << "Logger: " << log_define.name
+              << ", Level: " << LogLevel::to_string(log_define.level)
+              << ", Formatters: " << log_define.formatter << std::endl;
+
+    for (const auto& appender : log_define.appenders) {
+      std::string appender_type = (appender.type == 1)   ? "StdoutAppender"
+                                  : (appender.type == 2) ? "FileAppender"
+                                                         : "Unknown";
+      std::cout << "  - Appender: " << appender_type
+                << ", Level: " << LogLevel::to_string(appender.level)
+                << ", Formatter: " << appender.formatter;
+      if (appender.type == 2) { std::cout << ", File: " << appender.file; }
+      std::cout << std::endl;
+    }
+  }
+
+  // 导出配置到文件
+  std::ofstream ofs("./exported_log.yaml");
+  if (ofs.is_open()) {
+    std::string yaml_str = LogMgr::GetInstance()->toYamlString();
+    std::cout << yaml_str << std::endl;
+    ofs << yaml_str;
+
+    std::string yaml_str2 = logs->to_string();
+    std::cout << yaml_str2;
+    ofs.close();
+    std::cout << "Successfully exported log config to ./exported_log.yaml" << std::endl;
+    std::cout << "Exported content:\n" << yaml_str << std::endl;
+  } else {
+    std::cerr << "Failed to open file for export" << std::endl;
+  }
+}
+
 int main() {
   test_cast();
 
   test_yaml();
+
+  test_log_file_config();
 
   return 0;
 }

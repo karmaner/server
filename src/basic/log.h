@@ -173,8 +173,9 @@ public:
   LogLevel::Level getLevel() const { return m_level; }
   void            setLevel(LogLevel::Level val) { m_level = val; }
 
-  LogFormat::ptr getFormatter();
-  void           setFormatter(LogFormat::ptr val);
+  LogFormat::ptr      getFormatter();
+  void                setFormatter(LogFormat::ptr val);
+  virtual std::string toYamlString() = 0;
 
 protected:
   LogLevel::Level m_level        = LogLevel::DEBUG;
@@ -193,6 +194,7 @@ public:
   Log(const std::string& name = "root");
 
   LogLevel::Level    getLevel() const { return m_level; };
+  void               setLevel(const LogLevel::Level level) { m_level = level; }
   const std::string& getName() const { return m_name; }
   void               addAppender(LogAppender::ptr appender);
   void               delAppender(LogAppender::ptr appender);
@@ -200,6 +202,8 @@ public:
 
   LogFormat::ptr getFormat();
   void           setFormat(LogFormat::ptr format);
+  void           setFormat(const std::string& format);
+  std::string    toYamlString();
 
   void log(LogLevel::Level level, LogEvent::ptr e);
 
@@ -226,7 +230,8 @@ public:
   Log::ptr getRoot();
   Log::ptr getLog(const std::string& name);
 
-  void init();
+  void        init();
+  std::string toYamlString();
 
 private:
   Log::ptr                                  m_root;
@@ -237,7 +242,8 @@ class StdoutAppender : public LogAppender {
 public:
   typedef std::shared_ptr<StdoutAppender> ptr;
 
-  void log(std::shared_ptr<Log> log, LogLevel::Level level, LogEvent::ptr event) override;
+  void        log(std::shared_ptr<Log> log, LogLevel::Level level, LogEvent::ptr event) override;
+  std::string toYamlString() override;
 };
 
 class FileAppender : public LogAppender {
@@ -246,7 +252,8 @@ public:
 
   FileAppender(const std::string& name);
 
-  void log(std::shared_ptr<Log> log, LogLevel::Level level, LogEvent::ptr event) override;
+  void        log(std::shared_ptr<Log> log, LogLevel::Level level, LogEvent::ptr event) override;
+  std::string toYamlString() override;
 
   bool reopen();
 
@@ -263,5 +270,34 @@ private:
 };
 
 typedef Singleton<LogManager> LogMgr;
+
+// Log File
+
+struct LogAppenderDefine {
+  int             type  = 0;  // 1: Stdout 2:File
+  LogLevel::Level level = LogLevel::UNKNOWN;
+  std::string     formatter;
+  std::string     file;
+
+  bool operator==(const LogAppenderDefine& oth) const {
+    return type == oth.type && level == oth.level && formatter == oth.formatter && file == oth.file;
+  }
+};
+
+struct LogDefine {
+  std::string                    name;
+  LogLevel::Level                level = LogLevel::UNKNOWN;
+  std::string                    formatter;
+  std::vector<LogAppenderDefine> appenders;
+
+  bool operator==(const LogDefine& oth) const {
+    return name == oth.name && level == oth.level && formatter == oth.formatter &&
+           appenders == oth.appenders;
+  }
+
+  bool operator<(const LogDefine& oth) const { return name < oth.name; }
+
+  bool isValid() const { return !name.empty(); }
+};
 
 }  // namespace Basic
