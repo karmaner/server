@@ -36,6 +36,7 @@ Thread::Thread(std::function<void()> cb, const std::string& name) : m_cb(cb), m_
     LOG_ERROR("pthread_create thread fail, rt=%d, name=%s", rt, m_name.c_str());
     throw std::logic_error("pthread_create error");
   }
+  m_sem.wait();
 }
 
 Thread::~Thread() {
@@ -62,6 +63,8 @@ void* Thread::run(void* arg) {
 
   std::function<void()> cb;
   cb.swap(thread->m_cb);
+
+  thread->m_sem.notify();
 
   cb();
   return 0;

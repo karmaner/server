@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "basic/log.h"
+#include "basic/mutex.h"
 #include "utils/type_util.h"
 
 namespace Basic {
@@ -292,7 +293,7 @@ class ConfigVar : public ConfigVarBase {
 public:
   typedef std::shared_ptr<ConfigVar>                                  ptr;
   typedef std::function<void(const T& old_value, const T& new_value)> on_change_cb;
-  typedef int                                                         Lock;
+  typedef RWMutex                                                     LockType;
 
   ConfigVar(const std::string& name, const T& default_value, const std::string& desc = "")
       : ConfigVarBase(name, desc), m_val(default_value) {}
@@ -320,7 +321,7 @@ public:
 
   void setValue(const T& v) {
     {
-      Lock lock;
+      LockType::WriteLock lock(m_lock);
       if (v == m_val) return;
       for (auto& i : m_cbs) {
         i.second(m_val, v);
@@ -334,15 +335,15 @@ public:
   std::string getTypeName() const override { return type_name<T>(); }
 
   uint64_t addListener(on_change_cb cb) {
-    static uint64_t s_fun_id = 0;
-    Lock            lock;  // (m_mutex);
+    static uint64_t     s_fun_id = 0;
+    LockType::WriteLock lock(m_lock);
     ++s_fun_id;
     m_cbs[s_fun_id] = cb;
     return s_fun_id;
   }
 
   void delListener(uint64_t key) {
-    Lock lock;
+    LockType lock;
     m_cbs.erase(key);
   }
 
@@ -354,7 +355,7 @@ public:
   void clearListener() { m_cbs.clear(); }
 
 private:
-  Lock                             m_mutex;
+  LockType                         m_lock;
   T                                m_val;
   std::map<uint64_t, on_change_cb> m_cbs;
 };
@@ -362,7 +363,7 @@ private:
 class Config {
 public:
   typedef std::unordered_map<std::string, ConfigVarBase::ptr> ConfigVarMap;
-  typedef int                                                 RWLock;
+  typedef RWMutex                                             LockType;
 
   template <class T>
   static typename ConfigVar<T>::ptr Lookup(const std::string& name, const T& default_value,

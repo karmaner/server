@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "basic/mutex.h"
 #include "basic/singletion.h"
 #include "utils/thread_util.h"
 
@@ -169,7 +170,7 @@ class LogAppender {
 
 public:
   typedef std::shared_ptr<LogAppender> ptr;
-  typedef int                          Lock;
+  typedef RWMutex                      LockType;
 
   virtual ~LogAppender() {}
   virtual void log(std::shared_ptr<Log> log, LogLevel::Level level, LogEvent::ptr event) = 0;
@@ -185,7 +186,7 @@ protected:
   LogLevel::Level m_level        = LogLevel::DEBUG;
   bool            m_hasFormatter = false;
   LogFormat::ptr  m_formatter;
-  Lock            m_lock;
+  LockType        m_lock;
 };
 
 class Log : public std::enable_shared_from_this<Log> {
@@ -193,7 +194,7 @@ class Log : public std::enable_shared_from_this<Log> {
 
 public:
   typedef std::shared_ptr<Log> ptr;
-  typedef int                  Lock;
+  typedef SpinLock             LockType;
 
   Log(const std::string& name = "root");
 
@@ -224,11 +225,12 @@ private:
   LogFormat::ptr              m_formatter;
   LogLevel::Level             m_level = LogLevel::INFO;
   Log::ptr                    m_root;
-  Lock                        m_lock;
+  LockType                    m_lock;
 };
 
 class LogManager {
 public:
+  typedef SpinLock LockType;
   LogManager();
 
   Log::ptr getRoot();
@@ -240,6 +242,7 @@ public:
 private:
   Log::ptr                                  m_root;
   std::unordered_map<std::string, Log::ptr> m_logs;
+  LockType                                  m_lock;
 };
 
 class StdoutAppender : public LogAppender {

@@ -12,6 +12,8 @@
 #include <memory>
 #include <string>
 
+#include "basic/mutex.h"
+
 namespace Basic {
 
 class Thread {
@@ -41,6 +43,7 @@ private:
   pthread_t             m_thread = 0;
   std::function<void()> m_cb;
   std::string           m_name;
+  Semaphore             m_sem;
 };
 
 }  // namespace Basic
