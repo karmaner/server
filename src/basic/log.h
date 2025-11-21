@@ -1,5 +1,6 @@
 #pragma once
 
+#include <sched.h>
 #include <stdint.h>
 
 #include <fstream>
@@ -12,20 +13,23 @@
 #include <vector>
 
 #include "basic/singletion.h"
+#include "utils/thread_util.h"
 
 #define LOG_ROOT Basic::LogMgr::GetInstance()->getRoot()
 #define LOG_NAME(name) Basic::LogMgr::GetInstance()->getLog(name)
 
 #define LOG_LEVEL_STREAM(log, level)                                                              \
   if (level >= log->getLevel())                                                                   \
-  Basic::LogEventWrap(Basic::LogEvent::ptr(new Basic::LogEvent(log, level, __FILE__, __LINE__,    \
-                                                               time(0), 0, 0, 0, "thread_name"))) \
+  Basic::LogEventWrap(Basic::LogEvent::ptr(new Basic::LogEvent(                                   \
+                          log, level, __FILE__, __LINE__, time(0), 0 /*elapse*/, get_thread_id(), \
+                          0 /*fiber_id*/, get_thread_name())))                                    \
       .getSS()
 
 #define LOG_LEVEL_FMT(log, level, fmt, ...)                                                       \
   if (level >= log->getLevel())                                                                   \
-  Basic::LogEventWrap(Basic::LogEvent::ptr(new Basic::LogEvent(log, level, __FILE__, __LINE__,    \
-                                                               time(0), 0, 0, 0, "thread_name"))) \
+  Basic::LogEventWrap(Basic::LogEvent::ptr(new Basic::LogEvent(                                   \
+                          log, level, __FILE__, __LINE__, time(0), 0 /*elapse*/, get_thread_id(), \
+                          0 /*fiber_id*/, get_thread_name())))                                    \
       .getEvent()                                                                                 \
       ->format(fmt, ##__VA_ARGS__)
 
@@ -85,7 +89,7 @@ public:
   const uint64_t             getTime() const { return m_time; }
   const uint64_t             getElapse() const { return m_elapse; }
   const std::string&         getThreadName() const { return m_threadName; }
-  const uint32_t             getThreadId() const { return m_threadId; }
+  const pid_t                getThreadId() const { return m_threadId; }
   const uint64_t             getFiberId() const { return m_fiberId; }
   const LogLevel::Level      getLevel() const { return m_level; }
   const char*                getFile() const { return m_file; }
@@ -99,7 +103,7 @@ public:
 private:
   uint64_t             m_time     = 0;                     ///< 时间戳
   uint64_t             m_elapse   = 0;                     ///< 程序运行时长 ms
-  uint32_t             m_threadId = 0;                     ///< 线程id
+  pid_t                m_threadId = 0;                     ///< 线程id
   std::string          m_threadName;                       ///< 线程名称
   uint32_t             m_fiberId = 0;                      ///< 协程id
   LogLevel::Level      m_level   = LogLevel::Level::INFO;  ///< 日志等级
