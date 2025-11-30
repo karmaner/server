@@ -7,9 +7,9 @@ include_directories(
 
 add_subdirectory(basic)
 
-file(GLOB UTILS_FILE utils/*.cpp ./*.h)
+file(GLOB SERVER_FILE ./server.h)
 
-add_library(server STATIC ${UTILS_FILE})
+add_library(server STATIC ${SERVER_FILE})
 target_link_libraries(server
   PUBLIC
     basic

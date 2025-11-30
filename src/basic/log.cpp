@@ -307,12 +307,12 @@ std::string LogFormat::format(LogEvent::ptr event) {
 /*========================= LogAppender ========================*/
 
 LogFormat::ptr LogAppender::getFormatter() {
-  LockType::ReadLock lock(m_lock);
+  LockType lock(m_lock);
   return m_formatter;
 }
 
 void LogAppender::setFormatter(LogFormat::ptr val) {
-  LockType::WriteLock lock(m_lock);
+  LockType lock(m_lock);
   m_formatter = val;
   if (m_formatter) {
     m_hasFormatter = true;
@@ -330,7 +330,7 @@ Log::Log(const std::string& name) : m_name(name), m_level(LogLevel::DEBUG) {
 void Log::addAppender(LogAppender::ptr appender) {
   LockType::Lock lock(m_lock);
   if (!appender->getFormatter()) {
-    RWMutex::WriteLock lock2(appender->m_lock);
+    LockType lock2(appender->m_lock);
     appender->m_formatter = m_formatter;
   }
   m_appenders.push_back(appender);
@@ -340,7 +340,7 @@ void Log::delAppender(LogAppender::ptr appender) {
   LockType::Lock lock(m_lock);
   for (auto it = m_appenders.begin(); it != m_appenders.end(); ++it) {
     if (*it == appender) {
-      RWMutex::WriteLock lock2(appender->m_lock);
+      LockType lock2(appender->m_lock);
       m_appenders.erase(it);
       break;
     }
@@ -398,7 +398,7 @@ void Log::setFormat(LogFormat::ptr format) {
   LockType::Lock lock(m_lock);
   m_formatter = format;
   for (auto& i : m_appenders) {
-    RWMutex::WriteLock lock2(i->m_lock);
+    LockType lock2(i->m_lock);
     if (!i->m_hasFormatter) { i->setFormatter(format); }
   }
 }
@@ -470,13 +470,13 @@ std::string LogManager::toYamlString() {
 /*========================= StdoutAppender ========================*/
 
 void StdoutAppender::log(std::shared_ptr<Log> log, LogLevel::Level level, LogEvent::ptr event) {
-  LockType::ReadLock lock(m_lock);
+  LockType lock(m_lock);
   if (level >= m_level) { m_formatter->format(std::cout, event); }
 }
 
 std::string StdoutAppender::toYamlString() {
-  LockType::ReadLock lock(m_lock);
-  YAML::Node         node;
+  LockType   lock(m_lock);
+  YAML::Node node;
   node["type"] = "StdoutAppender";
   if (m_level != LogLevel::UNKNOWN) { node["level"] = LogLevel::to_string(m_level); }
   if (m_hasFormatter && m_formatter) { node["format"] = m_formatter->getPattern(); }
@@ -508,7 +508,7 @@ void FileAppender::log(std::shared_ptr<Log> log, LogLevel::Level level, LogEvent
       reopen();
       m_lastTime = now;
     }
-    LockType::ReadLock lock(m_lock);
+    LockType lock(m_lock);
     if (!m_formatter->format(m_filestream, event)) {
       std::cout << "FileAppender::log error" << std::endl;
     };
@@ -516,8 +516,8 @@ void FileAppender::log(std::shared_ptr<Log> log, LogLevel::Level level, LogEvent
 }
 
 std::string FileAppender::toYamlString() {
-  LockType::WriteLock lock(m_lock);
-  YAML::Node          node;
+  LockType   lock(m_lock);
+  YAML::Node node;
   node["type"] = "FileAppender";
   if (m_level != LogLevel::UNKNOWN) { node["level"] = LogLevel::to_string(m_level); }
   if (m_hasFormatter && m_formatter) { node["format"] = m_formatter->getPattern(); }

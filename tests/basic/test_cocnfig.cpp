@@ -4,7 +4,6 @@
 
 #include "basic/config.h"
 #include "basic/log.h"
-#include "utils/type_util.h"
 
 using namespace Basic;
 

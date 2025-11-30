@@ -21,7 +21,7 @@
 
 #include "basic/log.h"
 #include "basic/mutex.h"
-#include "utils/type_util.h"
+#include "basic/utils.h"
 
 namespace Basic {
 
