@@ -19,19 +19,21 @@
 #define LOG_ROOT Basic::LogMgr::GetInstance()->getRoot()
 #define LOG_NAME(name) Basic::LogMgr::GetInstance()->getLog(name)
 
-#define LOG_LEVEL_STREAM(log, level)                                                          \
-  if (level >= log->getLevel())                                                               \
-  Basic::LogEventWrap(Basic::LogEvent::ptr(new Basic::LogEvent(                               \
-                          log, level, __FILE__, __LINE__, time(0), 0 /*elapse*/,              \
-                          Basic::get_thread_id(), 0 /*fiber_id*/, Basic::get_thread_name()))) \
+#define LOG_LEVEL_STREAM(log, level)                                                              \
+  if (level >= log->getLevel())                                                                   \
+  Basic::LogEventWrap(                                                                            \
+      Basic::LogEvent::ptr(new Basic::LogEvent(log, level, __FILE__, __LINE__, time(0),           \
+                                               0 /*elapse*/, Basic::get_thread_id(),              \
+                                               Basic::get_fiber_id(), Basic::get_thread_name()))) \
       .getSS()
 
-#define LOG_LEVEL_FMT(log, level, fmt, ...)                                                   \
-  if (level >= log->getLevel())                                                               \
-  Basic::LogEventWrap(Basic::LogEvent::ptr(new Basic::LogEvent(                               \
-                          log, level, __FILE__, __LINE__, time(0), 0 /*elapse*/,              \
-                          Basic::get_thread_id(), 0 /*fiber_id*/, Basic::get_thread_name()))) \
-      .getEvent()                                                                             \
+#define LOG_LEVEL_FMT(log, level, fmt, ...)                                                       \
+  if (level >= log->getLevel())                                                                   \
+  Basic::LogEventWrap(                                                                            \
+      Basic::LogEvent::ptr(new Basic::LogEvent(log, level, __FILE__, __LINE__, time(0),           \
+                                               0 /*elapse*/, Basic::get_thread_id(),              \
+                                               Basic::get_fiber_id(), Basic::get_thread_name()))) \
+      .getEvent()                                                                                 \
       ->format(fmt, ##__VA_ARGS__)
 
 #define LOG_TRACE(fmt, ...) LOG_LEVEL_FMT(LOG_ROOT, Basic::LogLevel::TRACE, fmt, ##__VA_ARGS__)

@@ -10,7 +10,6 @@
 #include "basic/log.h"
 #include "basic/macro.h"
 #include "basic/scheduler.h"
-#include "basic/utils.h"
 
 namespace Basic {
 
@@ -138,6 +137,11 @@ void Fiber::Yield2Hold() {
 // 总协程数
 uint64_t Fiber::TotalFibers() {
   return s_fiber_count;
+}
+
+uint64_t Fiber::GetFiberId() {
+  if (t_fiber) { return t_fiber->getId(); }
+  return 0;
 }
 
 void Fiber::MainFunc() {

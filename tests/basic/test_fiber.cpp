@@ -159,11 +159,14 @@ void test_mutil_thread_fiber() {
       if (fibers[0]->getState() != Fiber::TERM) {
         LOG_INFO("线程 %d: 协程1未完成，强制执行完", i);
         fibers[0]->call();
+
+        if (fibers[0]->getState() == Fiber::TERM) { LOG_INFO("执行完毕"); }
       }
 
       if (fibers[1]->getState() != Fiber::TERM) {
         LOG_INFO("线程 %d: 协程2未完成，强制执行完", i);
         fibers[1]->call();
+        if (fibers[1]->getState() == Fiber::TERM) { LOG_INFO("执行完毕"); }
       }
 
       LOG_INFO("线程 %d: 所有协程执行完毕，准备退出", i);

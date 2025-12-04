@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/syscall.h>
 
+#include "basic/fiber.h"
 #include "basic/log.h"
 
 namespace Basic {
@@ -25,6 +26,10 @@ const char* get_thread_name() {
 
 int get_thread_id() {
   return (int)syscall(SYS_gettid);
+}
+
+uint64_t get_fiber_id() {
+  return Fiber::GetFiberId();
 }
 
 void my_backtrace(std::vector<std::string>& bt, int size, int skip) {

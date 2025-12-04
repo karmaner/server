@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pthread.h>
+#include <stdint.h>
 #include <sys/prctl.h>
 #include <unistd.h>
 
@@ -55,6 +56,13 @@ const char* get_thread_name();
  * @return int 当前线程的ID
  */
 pid_t get_thread_id();
+
+/**
+ * @brief 获取当前协程的ID
+ *
+ * @return int 当前协程的ID
+ */
+uint64_t get_fiber_id();
 
 /**
  * @brief 获取当前的调用栈
