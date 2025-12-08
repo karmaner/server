@@ -1,13 +1,12 @@
 #include <exception>
 #include <iostream>
 
-#include "basic/scheduler.h"
 #include "server.h"
 
 using namespace Basic;
 
 void test_fiber_switch() {
-  Scheduler sc(3, false, "test");
+  Scheduler sc(3, "test");
 
   std::cout << "=== 测试1: 基本fiber切换 ===" << std::endl;
 
@@ -17,13 +16,15 @@ void test_fiber_switch() {
     std::cout << "Fiber 1: 重新获得控制权" << std::endl;
   }));
 
-  auto fiber2 = Fiber::ptr(new Fiber([]() {
+  auto                    fiber2 = Fiber::ptr(new Fiber([]() {
     std::cout << "Fiber 2: 开始执行" << std::endl;
     Fiber::Yield2Hold();  // 切换出去
     std::cout << "Fiber 2: 重新获得控制权" << std::endl;
   }));
-
-  sc.schedule(fiber1, fiber2);
+  std::vector<Fiber::ptr> as;
+  as.push_back(fiber1);
+  as.push_back(fiber2);
+  sc.schedule(as.begin(), as.end());
 
   // 手动切换
   fiber1->swapIn();
@@ -42,6 +43,7 @@ void test_fiber() {
 }
 
 void test_basic() {
+  LOG_INFO("开始测试");
   LOG_INFO("main");
   Scheduler sc(3, true, "test");
   sc.schedule(test_fiber);
@@ -55,7 +57,7 @@ void test_basic() {
 int main() {
   Config::LoadFromDir("");
   try {
-    test_fiber_switch();
-    // test_basic();
+    // test_fiber_switch();
+    test_basic();
   } catch (std::exception e) { LOG_ERROR("报错%s", e.what()); }
 }

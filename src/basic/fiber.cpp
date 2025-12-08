@@ -5,6 +5,7 @@
 
 #include <atomic>
 #include <cstdlib>
+#include <string>
 
 #include "basic/config.h"
 #include "basic/log.h"
@@ -31,7 +32,7 @@ Fiber::Fiber() {
 
   ++s_fiber_count;
 
-  LOG_DEBUG("Fiber::Fiber main");
+  LOG_DEBUG("Fiber main");
 }
 
 Fiber::Fiber(std::function<void()> cb, size_t stacksize, bool use_caller)
@@ -55,7 +56,7 @@ Fiber::Fiber(std::function<void()> cb, size_t stacksize, bool use_caller)
 Fiber::~Fiber() {
   --s_fiber_count;
   if (m_stack) {
-    ASSERT(m_state == TERM || m_state == INIT || m_state == EXCEPT);
+    ASSERT2(m_state == TERM || m_state == INIT || m_state == EXCEPT, "State=" + std::string(Fiber::to_string(this->getState())));
     free(m_stack);
   } else {
     ASSERT(!m_cb);
@@ -165,7 +166,8 @@ void Fiber::MainFunc() {
   cur.reset();
   raw_ptr->swapOut();
 
-  ASSERT2(false, "never reach fiber_id=" + std::to_string(raw_ptr->getId()));
+  ASSERT2(false, "never reach fiber_id=" + std::to_string(raw_ptr->getId()) +
+                     ", fiber_state=" + to_string(raw_ptr->getState()));
 }
 
 void Fiber::CallerMainFunc() {
@@ -189,7 +191,8 @@ void Fiber::CallerMainFunc() {
   cur.reset();
   raw_ptr->back();
 
-  ASSERT2(false, "never reach fiber_id=" + std::to_string(raw_ptr->getId()));
+  ASSERT2(false, "never reach fiber_id=" + std::to_string(raw_ptr->getId()) +
+                     ", fiber_state=" + to_string(raw_ptr->getState()));
 }
 
 }  // namespace Basic
