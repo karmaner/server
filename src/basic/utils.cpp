@@ -61,4 +61,33 @@ std::string backtrace2string(int size, int skip, const std::string& prefix) {
   return ss.str();
 }
 
+uint64_t get_current_ms() {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return tv.tv_sec * 1000ul  + tv.tv_usec / 1000;
+}
+
+uint64_t get_current_us() {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return tv.tv_sec * 1000 * 1000ul  + tv.tv_usec;
+}
+
+std::string time2str(time_t ts, const std::string& format) {
+  struct tm tm;
+  localtime_r(&ts, &tm);
+  char buf[64];
+  strftime(buf, sizeof(buf), format.c_str(), &tm);
+  return buf;
+}
+
+time_t str2time(const char* str, const char* format) {
+  struct tm t;
+  memset(&t, 0, sizeof(t));
+  if(!strptime(str, format, &t)) {
+    return 0;
+  }
+  return mktime(&t);
+}
+
 }  // namespace Basic

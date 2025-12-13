@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <stdint.h>
 #include <sys/prctl.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 #include <string>
@@ -74,5 +75,19 @@ void my_backtrace(std::vector<std::string>& bt, int size, int skip = 1);
  * return 调用字符串
  */
 std::string backtrace2string(int size = 64, int skip = 2, const std::string& prefix = "");
+
+/**
+ * @brief 获取当前时间的毫秒
+ */
+uint64_t get_current_ms();
+
+/**
+ * @brief 获取当前时间的微秒
+ */
+uint64_t get_current_us();
+
+std::string time2str(time_t ts = time(0), const std::string& format = "%Y-%m-%d %H:%M:%S");
+
+time_t str2time(const std::string& str, const std::string& format = "%Y-%m-%d %H:%M:%S");
 
 }  // namespace Basic

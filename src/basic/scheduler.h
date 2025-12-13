@@ -88,6 +88,7 @@ protected:
   void         run();
   virtual bool stopping();
   virtual void idle();
+  bool         hasIdleThreads() { return m_idleThreadCount > 0; }
 
 protected:
   std::vector<int>    m_threadIds;
