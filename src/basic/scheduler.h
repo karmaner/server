@@ -14,7 +14,7 @@ public:
   typedef std::shared_ptr<Scheduler> ptr;
   typedef Mutex                      LockType;
 
-  Scheduler(size_t thread_count = 1, bool use_caller = true, const std::string& name = "");
+  Scheduler(size_t thread_count = 1, const std::string& name = "", bool use_caller = true);
   virtual ~Scheduler();
 
   const std::string& getName() const { return m_name; }

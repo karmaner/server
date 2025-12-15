@@ -55,7 +55,7 @@ void Thread::join() {
 }
 
 void* Thread::run(void* arg) {
-  Thread* thread = (Thread*)arg;
+  Thread* thread = static_cast<Thread*>(arg);
   t_thread       = thread;
   t_thread_name  = thread->m_name;
   thread->m_id   = get_thread_id();
@@ -63,9 +63,8 @@ void* Thread::run(void* arg) {
 
   std::function<void()> cb;
   cb.swap(thread->m_cb);
-
   thread->m_sem.notify();
-
+  
   cb();
   return 0;
 }

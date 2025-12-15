@@ -21,7 +21,7 @@ public:
 
 private:
   struct FdContext {
-    typedef Mutex MutexType;
+    typedef Mutex LockType;
     struct EventContext {
       Scheduler*            scheduler = nullptr;  // 事件执行的scheduler
       Fiber::ptr            fiber;                // 事件协程
@@ -36,11 +36,11 @@ private:
     EventContext write;          // 写事件
     int          fd     = 0;     // 事件关联的句柄
     Event        events = NONE;  // 已经注册的事件
-    MutexType    mutex;
+    LockType     lock;
   };
 
 public:
-  IOManager(size_t threads = 1, bool use_caller = true, const std::string& name = "");
+  IOManager(size_t threads = 1, const std::string& name = "", bool use_caller = true);
   ~IOManager();
 
   // 0 success, -1 error

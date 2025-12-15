@@ -18,6 +18,7 @@ IOManager::FdContext::EventContext& IOManager::FdContext::getContext(IOManager::
     default:
       ASSERT2(false, "getContext");
   }
+    throw std::invalid_argument("getContext invalid event");
 }
 
 void IOManager::FdContext::resetContext(EventContext& ctx) {
@@ -27,6 +28,7 @@ void IOManager::FdContext::resetContext(EventContext& ctx) {
 }
 
 void IOManager::FdContext::triggerEvent(IOManager::Event event) {
+  LOG_INFO("fd=%d, triggerEvent event=%d, events=%d", fd, event, events);
   ASSERT(events & event);
   events            = (Event)(events & ~event);
   EventContext& ctx = getContext(event);
@@ -39,9 +41,10 @@ void IOManager::FdContext::triggerEvent(IOManager::Event event) {
   return;
 }
 
-IOManager::IOManager(size_t threads, bool use_caller, const std::string& name)
-    : Scheduler(threads, use_caller, name) {
-  m_epfd = epoll_create(5000);
+IOManager::IOManager(size_t threads, const std::string& name, bool use_caller)
+  : Scheduler(threads, name, use_caller) {
+  
+    m_epfd = epoll_create(5000);
   ASSERT(m_epfd > 0);
 
   int rt = pipe(m_tickleFds);
@@ -107,7 +110,7 @@ int IOManager::addEvent(int fd, Event event, std::function<void()> cb) {
     fd_ctx = m_fdContexts[fd];
   }
 
-  FdContext::MutexType::Lock lock2(fd_ctx->mutex);
+  FdContext::LockType::Lock lock2(fd_ctx->lock);
   if (fd_ctx->events & event) {
     LOG_ERROR("addEvent assert fd=%d,event=%d,fd_ctx.event=%d", fd, event, fd_ctx->events);
     ASSERT(!(fd_ctx->events & event));
@@ -135,7 +138,7 @@ int IOManager::addEvent(int fd, Event event, std::function<void()> cb) {
     event_ctx.cb.swap(cb);
   } else {
     event_ctx.fiber = Fiber::GetThis();
-    ASSERT(event_ctx.fiber->getState() == Fiber::EXEC);
+    ASSERT2(event_ctx.fiber->getState() == Fiber::EXEC, "state=" << event_ctx.fiber->getState());
   }
   return 0;
 }
@@ -143,10 +146,11 @@ int IOManager::addEvent(int fd, Event event, std::function<void()> cb) {
 bool IOManager::delEvent(int fd, Event event) {
   LockType::ReadLock lock(m_lock);
   if ((int)m_fdContexts.size() <= fd) { return false; }
-  FdContext* fd_ctx = m_fdContexts[fd];
+  
+   FdContext* fd_ctx = m_fdContexts[fd];
   lock.unlock();
 
-  FdContext::MutexType::Lock lock2(fd_ctx->mutex);
+  FdContext::LockType::Lock lock2(fd_ctx->lock);
   if (!(fd_ctx->events & event)) { return false; }
 
   Event       new_events = (Event)(fd_ctx->events & ~event);
@@ -175,7 +179,7 @@ bool IOManager::cancelEvent(int fd, Event event) {
   FdContext* fd_ctx = m_fdContexts[fd];
   lock.unlock();
 
-  FdContext::MutexType::Lock lock2(fd_ctx->mutex);
+  FdContext::LockType::Lock lock2(fd_ctx->lock);
   if (!(fd_ctx->events & event)) { return false; }
 
   Event       new_events = (Event)(fd_ctx->events & ~event);
@@ -202,7 +206,7 @@ bool IOManager::cancelAll(int fd) {
   FdContext* fd_ctx = m_fdContexts[fd];
   lock.unlock();
 
-  FdContext::MutexType::Lock lock2(fd_ctx->mutex);
+  FdContext::LockType::Lock lock2(fd_ctx->lock);
   if (!fd_ctx->events) { return false; }
 
   int         op = EPOLL_CTL_DEL;
@@ -235,7 +239,7 @@ IOManager* IOManager::GetThis() {
 }
 
 void IOManager::tickle() {
-  if (hasIdleThreads()) { return; }
+  if (!hasIdleThreads()) { return; }
   int rt = write(m_tickleFds[1], "T", 1);
   ASSERT(rt == 1);
 }
@@ -246,8 +250,12 @@ bool IOManager::stopping() {
 }
 
 void IOManager::idle() {
-  epoll_event*                 events = new epoll_event[64]();
-  std::shared_ptr<epoll_event> shared_events(events, [](epoll_event* ptr) { delete[] ptr; });
+    LOG_DEBUG("idle");
+    const uint64_t MAX_EVNETS = 256;
+    epoll_event* events = new epoll_event[MAX_EVNETS]();
+    std::shared_ptr<epoll_event> shared_events(events, [](epoll_event* ptr){
+        delete[] ptr;
+    });
 
   while (true) {
     uint64_t next_timeout = 0;
@@ -280,13 +288,12 @@ void IOManager::idle() {
       epoll_event& event = events[i];
       if (event.data.fd == m_tickleFds[0]) {
         uint8_t dummy;
-        while (read(m_tickleFds[0], &dummy, 1) == 1)
-          ;
+        while (read(m_tickleFds[0], &dummy, 1) > 0);
         continue;
       }
 
       FdContext*                 fd_ctx = (FdContext*)event.data.ptr;
-      FdContext::MutexType::Lock lock(fd_ctx->mutex);
+      FdContext::LockType::Lock lock(fd_ctx->lock);
       if (event.events & (EPOLLERR | EPOLLHUP)) { event.events |= EPOLLIN | EPOLLOUT; }
       int real_events = NONE;
       if (event.events & EPOLLIN) { real_events |= READ; }

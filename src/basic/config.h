@@ -296,10 +296,12 @@ public:
   typedef RWMutex                                                     LockType;
 
   ConfigVar(const std::string& name, const T& default_value, const std::string& desc = "")
-      : ConfigVarBase(name, desc), m_val(default_value) {}
+    : ConfigVarBase(name, desc),
+    m_val(default_value) {}
 
   std::string to_string() override {
     try {
+      LockType::ReadLock lock(m_lock);
       return ToStr()(m_val);
     } catch (std::exception& e) {
       LOG_ERROR("ConfigVar::toString exception:%s, convert:%s, name=%s", e.what(),
@@ -321,16 +323,20 @@ public:
 
   void setValue(const T& v) {
     {
-      LockType::WriteLock lock(m_lock);
+      LockType::ReadLock lock(m_lock);
       if (v == m_val) return;
       for (auto& i : m_cbs) {
         i.second(m_val, v);
       }
     }
+    LockType::WriteLock lock(m_lock);
     m_val = v;
   }
 
-  const T getValue() { return m_val; }
+  const T getValue() { 
+    LockType::ReadLock lock(m_lock);
+    return m_val;
+  }
 
   std::string getTypeName() const override { return type_name<T>(); }
 
@@ -343,16 +349,20 @@ public:
   }
 
   void delListener(uint64_t key) {
-    LockType lock;
+    LockType::WriteLock lock(m_lock);
     m_cbs.erase(key);
   }
 
   on_change_cb getListener(uint64_t key) {
+    LockType::ReadLock lock(m_lock);
     auto it = m_cbs.find(key);
     return it == m_cbs.end() ? nullptr : it->second;
   }
 
-  void clearListener() { m_cbs.clear(); }
+  void clearListener() {
+    LockType::WriteLock lock(m_lock);
+    m_cbs.clear();
+  }
 
 private:
   LockType                         m_lock;
@@ -368,6 +378,7 @@ public:
   template <class T>
   static typename ConfigVar<T>::ptr Lookup(const std::string& name, const T& default_value,
                                            const std::string& desc = "") {
+    LockType::WriteLock lock(GetLock());
     auto it = GetDatas().find(name);
     if (it != GetDatas().end()) {
       auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
@@ -408,6 +419,11 @@ private:
   static ConfigVarMap& GetDatas() {
     static ConfigVarMap s_datas;
     return s_datas;
+  }
+
+  static LockType& GetLock() {
+    static LockType s_lock;
+    return s_lock;
   }
 };
 

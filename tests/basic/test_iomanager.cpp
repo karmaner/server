@@ -28,7 +28,7 @@ void test_fiber() {
   memset(&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
   addr.sin_port   = htons(80);
-  inet_pton(AF_INET, "110.242.74.102", &addr.sin_addr.s_addr);
+  inet_pton(AF_INET, "111.63.65.247", &addr.sin_addr.s_addr);
 
   if (!connect(sock, (const sockaddr*)&addr, sizeof(addr))) {
   } else if (errno == EINPROGRESS) {
@@ -47,13 +47,13 @@ void test_fiber() {
 
 void test1() {
   std::cout << "EPOLLIN=" << EPOLLIN << " EPOLLOUT=" << EPOLLOUT << std::endl;
-  IOManager iom(2, false);
+  IOManager iom(2, "test", false);
   iom.schedule(&test_fiber);
 }
 
 Timer::ptr s_timer;
 void       test_timer() {
-  IOManager iom(2);
+  IOManager iom(2, "test2");
   s_timer = iom.addTimer(
       1000,
       []() {
@@ -68,7 +68,7 @@ void       test_timer() {
 }
 
 int main(int argc, char** argv) {
-  // test1();
+  test1();
   test_timer();
   return 0;
 }
