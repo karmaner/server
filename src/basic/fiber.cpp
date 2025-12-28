@@ -87,23 +87,26 @@ void Fiber::swapIn() {
   SetThis(this);
   ASSERT(m_state != EXEC);
   m_state = EXEC;
-
+  LOG_DEBUG("swapIn: fiber change run_fiber=%d, swap_fiber=%d", getId(), Scheduler::GetMainFiber()->getId());
   if (swapcontext(&Scheduler::GetMainFiber()->m_ctx, &m_ctx)) { ASSERT2(false, "swapcontext"); }
 }
 
 void Fiber::swapOut() {
   SetThis(Scheduler::GetMainFiber());
+  LOG_DEBUG("swapOut: fiber change run_fiber=%d, swap_fiber=%d", Scheduler::GetMainFiber()->getId(), getId());
   if (swapcontext(&m_ctx, &Scheduler::GetMainFiber()->m_ctx)) { ASSERT2(false, "swapcontext"); }
 }
 
 void Fiber::call() {
   SetThis(this);
   m_state = EXEC;
+  LOG_DEBUG("call: fiber change run_fiber=%d, swap_fiber=%d", getId(), t_threadFiber->getId());
   if (swapcontext(&t_threadFiber->m_ctx, &m_ctx)) { ASSERT2(false, "swapcontext"); }
 }
 
 void Fiber::back() {
   SetThis(t_threadFiber.get());
+  LOG_DEBUG("back: fiber change run_fiber=%d, swap_fiber=%d", t_threadFiber->getId(), getId());
   if (swapcontext(&m_ctx, &t_threadFiber->m_ctx)) { ASSERT2(false, "swapcontext"); }
 }
 
@@ -119,7 +122,6 @@ Fiber::ptr Fiber::GetThis() {
   return t_fiber->shared_from_this();
 }
 
-// 协程切换到后台，并且设置为Ready状态
 void Fiber::Yield2Ready() {
   Fiber::ptr cur = GetThis();
   ASSERT(cur->m_state == EXEC);
@@ -127,7 +129,6 @@ void Fiber::Yield2Ready() {
   cur->swapOut();
 }
 
-// 协程切换到后台，并且设置为Hold状态
 void Fiber::Yield2Hold() {
   Fiber::ptr cur = GetThis();
   ASSERT(cur->m_state == EXEC);
@@ -135,7 +136,6 @@ void Fiber::Yield2Hold() {
   cur->swapOut();
 }
 
-// 总协程数
 uint64_t Fiber::TotalFibers() {
   return s_fiber_count;
 }

@@ -18,8 +18,8 @@ public:
 
   static const char* to_string(State state) {
     static const std::unordered_map<State, const char*> stateNames = {
-        {INIT, "INIT"}, {HOLD, "HOLD"},   {EXEC, "EXEC"},
-        {TERM, "TERM"}, {READY, "READY"}, {EXCEPT, "EXCEPT"}};
+      {INIT, "INIT"}, {HOLD, "HOLD"},   {EXEC, "EXEC"},
+      {TERM, "TERM"}, {READY, "READY"}, {EXCEPT, "EXCEPT"}};
     static const char* unknown = "UNKNOWN";
     auto               it      = stateNames.find(state);
     return (it != stateNames.end()) ? it->second : unknown;

@@ -324,7 +324,7 @@ void LogAppender::setFormatter(LogFormat::ptr val) {
 /*========================= Log ========================*/
 
 Log::Log(const std::string& name) : m_name(name), m_level(LogLevel::DEBUG) {
-  m_formatter.reset(new LogFormat("%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T%F%T[%p]%T[%c]%T%f:%l%T%m%n"));
+  m_formatter.reset(new LogFormat("%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T%F%T[%p]%T[%c]%T%f:%l >> %m%n"));
 }
 
 void Log::addAppender(LogAppender::ptr appender) {

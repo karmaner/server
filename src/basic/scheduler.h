@@ -1,7 +1,9 @@
 #pragma once
 
+#include <iostream>
 #include <memory>
 #include <vector>
+#include <list>
 
 #include "basic/fiber.h"
 #include "basic/mutex.h"
@@ -26,6 +28,16 @@ public:
 
   void start();
   void stop();
+
+  void switchTo(int thread);
+  std::ostream& dump(std::ostream& os = std::cout);
+
+protected:
+  virtual void tickle();
+  void         run();
+  virtual bool stopping();
+  virtual void idle();
+  bool         hasIdleThreads() { return m_idleThreadCount > 0; }
 
 public:
   template <typename FiberOrCb>
@@ -84,13 +96,6 @@ private:
   };
 
 protected:
-  virtual void tickle();
-  void         run();
-  virtual bool stopping();
-  virtual void idle();
-  bool         hasIdleThreads() { return m_idleThreadCount > 0; }
-
-protected:
   std::vector<int>    m_threadIds;
   size_t              m_threadCount = 0;
   std::atomic<size_t> m_activeThreadCount{0};
@@ -106,7 +111,7 @@ private:
 
   Fiber::ptr                  m_rootFiber;
   std::vector<Thread::ptr>    m_threads;
-  std::vector<FiberAndThread> m_fibers;
+  std::list<FiberAndThread> m_fibers;
 };
 
 }  // namespace Basic

@@ -36,9 +36,8 @@ void test_fiber() {
     IOManager::GetThis()->addEvent(sock, IOManager::READ, []() { LOG_INFO("read callback"); });
     IOManager::GetThis()->addEvent(sock, IOManager::WRITE, []() {
       LOG_INFO("write callback");
-      // close(sock);
       IOManager::GetThis()->cancelEvent(sock, IOManager::READ);
-      close(sock);
+      // close(sock);
     });
   } else {
     LOG_INFO("else %d %s", errno, strerror(errno));
@@ -53,7 +52,7 @@ void test1() {
 
 Timer::ptr s_timer;
 void       test_timer() {
-  IOManager iom(2, "test2");
+  IOManager iom(2, "test2", false);
   s_timer = iom.addTimer(
       1000,
       []() {
@@ -67,8 +66,36 @@ void       test_timer() {
       true);
 }
 
+void test_condition_timer() {
+  IOManager iom(2, "test_cond", false);
+  
+  // 创建一个可能被提前销毁的对象
+  auto cond_obj = std::make_shared<int>(42);
+  
+  // 添加条件定时器
+  auto timer = iom.addConditionTimer(500, [cond_obj]() {
+    LOG_INFO("Condition timer triggered, object value: %d", *cond_obj);
+  }, std::weak_ptr<int>(cond_obj), true);
+  
+  // 模拟工作
+  iom.schedule([]() {
+    sleep(2);  // 等待2秒
+    LOG_INFO("Main work done");
+  });
+  
+  // 1.5秒后销毁条件对象
+  iom.addTimer(1500, [cond_obj_ptr = &cond_obj]() {
+    LOG_INFO("Destroying condition object");
+    *cond_obj_ptr = nullptr;  // 销毁条件对象
+  }, false);
+  
+  iom.stop();
+}
+
 int main(int argc, char** argv) {
-  test1();
+  Config::LoadFromDir("");
+  // test1();
   test_timer();
+  // test_condition_timer();
   return 0;
 }

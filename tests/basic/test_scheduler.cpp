@@ -46,10 +46,9 @@ void test_basic() {
   LOG_INFO("开始测试");
   LOG_INFO("main");
   Scheduler sc(3, "test", true);
-  LOG_INFO("schedule");
   sc.schedule(test_fiber);
   sc.start();
-  LOG_INFO("schedule");
+  sc.dump() << "dump file";
   sc.stop();
   LOG_INFO("over");
 }
