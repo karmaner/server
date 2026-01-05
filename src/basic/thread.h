@@ -13,10 +13,11 @@
 #include <string>
 
 #include "basic/mutex.h"
+#include "basic/noncopyable.h"
 
 namespace Basic {
 
-class Thread {
+class Thread : public NonCopyable {
 public:
   typedef std::shared_ptr<Thread> ptr;
   Thread(std::function<void()> cb, const std::string& name);
@@ -32,10 +33,6 @@ public:
   static void               SetName(const std::string& name);
 
 private:
-  Thread(const Thread&)            = delete;
-  Thread(const Thread&&)           = delete;
-  Thread& operator=(const Thread&) = delete;
-
   static void* run(void* arg);
 
 private:

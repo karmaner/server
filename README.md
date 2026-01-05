@@ -9,10 +9,19 @@ LOG_XXX(fmt, ...);
 LOG_XXX_STREAM << "thing" << std::endl; // YES it is a ostream!
 
 ### 配置模块
-配置文件 yaml
-使用解析模块
+配置文件
+
+yaml使用解析模块
+使用yaml-cpp来解析Yaml文件, 对Log日志的配置进行了封装。
+
+特化了容器 <--> yaml文件双向转化
+
+__LogInit() 特化配置文件处理工具
 
 ### 线程模块
+
+简单的封装了pthrad线程，让它支持RAII
+
 ### 协程模块
 ### 协程调度模块
 ### Hook模块

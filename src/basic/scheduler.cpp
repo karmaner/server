@@ -9,8 +9,7 @@ namespace Basic {
 static thread_local Scheduler* t_scheduler       = nullptr;
 static thread_local Fiber*     t_scheduler_fiber = nullptr;
 
-Scheduler::Scheduler(size_t threads, const std::string& name, bool use_caller)
-  : m_name(name) {
+Scheduler::Scheduler(size_t threads, const std::string& name, bool use_caller) : m_name(name) {
   ASSERT(threads > 0);
 
   if (use_caller) {
@@ -85,7 +84,7 @@ void Scheduler::stop() {
   if (m_rootFiber) { tickle(); }
 
   if (m_rootFiber) {
-    if(!stopping()) {
+    if (!stopping()) {
       LOG_INFO("error show up");
       m_rootFiber->call();
     }
@@ -111,16 +110,16 @@ void Scheduler::run() {
   LOG_DEBUG("scheduler:%s run", m_name.c_str());
   setThis();
   if (get_thread_id() != m_rootThread) { t_scheduler_fiber = Fiber::GetThis().get(); }
-  
+
   Fiber::ptr idle_fiber(new Fiber(std::bind(&Scheduler::idle, this)));
   Fiber::ptr cb_fiber;
-  
+
   FiberAndThread ft;
-    while (true) {
-      ft.reset();
-      bool tickle_me = false;
-      bool is_active = false;
-      {
+  while (true) {
+    ft.reset();
+    bool tickle_me = false;
+    bool is_active = false;
+    {
       LockType::Lock lock(m_lock);
       auto           it = m_fibers.begin();
       while (it != m_fibers.end()) {
@@ -129,13 +128,13 @@ void Scheduler::run() {
           tickle_me = true;
           continue;
         }
-        
+
         ASSERT(it->fiber || it->cb);
         if (it->fiber && it->fiber->getState() == Fiber::EXEC) {
           ++it;
           continue;
         }
-        
+
         ft = *it;
         m_fibers.erase(it++);
         ++m_activeThreadCount;
@@ -144,7 +143,7 @@ void Scheduler::run() {
       }
       tickle_me |= it != m_fibers.end();
     }
-    
+
     if (tickle_me) { tickle(); }
 
     if (ft.fiber &&
@@ -185,7 +184,7 @@ void Scheduler::run() {
         LOG_INFO("idle fiber term");
         break;
       }
-      
+
       ++m_idleThreadCount;
       idle_fiber->swapIn();
       --m_idleThreadCount;
@@ -214,26 +213,20 @@ void Scheduler::idle() {
 
 void Scheduler::switchTo(int thread) {
   ASSERT(Scheduler::GetThis() != nullptr);
-  if(Scheduler::GetThis() == this) {
-    if(thread == -1 || thread == get_thread_id()) {
-      return;
-    }
+  if (Scheduler::GetThis() == this) {
+    if (thread == -1 || thread == get_thread_id()) { return; }
   }
   schedule(Fiber::GetThis(), thread);
   Fiber::Yield2Hold();
 }
 
 std::ostream& Scheduler::dump(std::ostream& os) {
-  os << "[Scheduler name=" << m_name
-      << " size=" << m_threadCount
-      << " active_count=" << m_activeThreadCount
-      << " idle_count=" << m_idleThreadCount
-      << " stopping=" << m_stopping
-      << " ]" << std::endl << "    ";
-  for(size_t i = 0; i < m_threadIds.size(); ++i) {
-    if(i) {
-      os << ", ";
-    }
+  os << "[Scheduler name=" << m_name << " size=" << m_threadCount
+     << " active_count=" << m_activeThreadCount << " idle_count=" << m_idleThreadCount
+     << " stopping=" << m_stopping << " ]" << std::endl
+     << "    ";
+  for (size_t i = 0; i < m_threadIds.size(); ++i) {
+    if (i) { os << ", "; }
     os << m_threadIds[i];
   }
   return os;

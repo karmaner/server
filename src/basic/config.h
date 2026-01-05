@@ -296,8 +296,7 @@ public:
   typedef RWMutex                                                     LockType;
 
   ConfigVar(const std::string& name, const T& default_value, const std::string& desc = "")
-    : ConfigVarBase(name, desc),
-    m_val(default_value) {}
+      : ConfigVarBase(name, desc), m_val(default_value) {}
 
   std::string to_string() override {
     try {
@@ -333,7 +332,7 @@ public:
     m_val = v;
   }
 
-  const T getValue() { 
+  const T getValue() {
     LockType::ReadLock lock(m_lock);
     return m_val;
   }
@@ -355,7 +354,7 @@ public:
 
   on_change_cb getListener(uint64_t key) {
     LockType::ReadLock lock(m_lock);
-    auto it = m_cbs.find(key);
+    auto               it = m_cbs.find(key);
     return it == m_cbs.end() ? nullptr : it->second;
   }
 
@@ -379,7 +378,7 @@ public:
   static typename ConfigVar<T>::ptr Lookup(const std::string& name, const T& default_value,
                                            const std::string& desc = "") {
     LockType::WriteLock lock(GetLock());
-    auto it = GetDatas().find(name);
+    auto                it = GetDatas().find(name);
     if (it != GetDatas().end()) {
       auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
       if (tmp) {

@@ -264,6 +264,10 @@ IPv4Address::IPv4Address(uint32_t address, uint16_t port) {
   m_addr.sin_addr.s_addr = byteswapOnLittleEndian(address);
 }
 
+sockaddr* IPv4Address::getAddr() {
+  return (sockaddr*)&m_addr;
+}
+
 const sockaddr* IPv4Address::getAddr() const {
   return (sockaddr*)&m_addr;
 }
@@ -341,6 +345,10 @@ IPv6Address::IPv6Address(const uint8_t address[16], uint16_t port) {
 }
 
 const sockaddr* IPv6Address::getAddr() const {
+  return (sockaddr*)&m_addr;
+}
+
+sockaddr* IPv6Address::getAddr() {
   return (sockaddr*)&m_addr;
 }
 
@@ -426,6 +434,10 @@ UnixAddress::UnixAddress(const std::string& path) {
   m_length += offsetof(sockaddr_un, sun_path);
 }
 
+sockaddr* UnixAddress::getAddr() {
+  return (sockaddr*)&m_addr;
+}
+
 const sockaddr* UnixAddress::getAddr() const {
   return (sockaddr*)&m_addr;
 }
@@ -452,6 +464,10 @@ UnknownAddress::UnknownAddress(const sockaddr& addr) {
 }
 
 const sockaddr* UnknownAddress::getAddr() const {
+  return &m_addr;
+}
+
+sockaddr* UnknownAddress::getAddr() {
   return &m_addr;
 }
 
