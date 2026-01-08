@@ -18,7 +18,7 @@ IOManager::FdContext::EventContext& IOManager::FdContext::getContext(IOManager::
     default:
       ASSERT2(false, "getContext");
   }
-    throw std::invalid_argument("getContext invalid event");
+  throw std::invalid_argument("getContext invalid event");
 }
 
 void IOManager::FdContext::resetContext(EventContext& ctx) {
@@ -42,9 +42,8 @@ void IOManager::FdContext::triggerEvent(IOManager::Event event) {
 }
 
 IOManager::IOManager(size_t threads, const std::string& name, bool use_caller)
-  : Scheduler(threads, name, use_caller) {
-  
-    m_epfd = epoll_create(5000);
+    : Scheduler(threads, name, use_caller) {
+  m_epfd = epoll_create(5000);
   ASSERT(m_epfd > 0);
 
   int rt = pipe(m_tickleFds);
@@ -146,8 +145,8 @@ int IOManager::addEvent(int fd, Event event, std::function<void()> cb) {
 bool IOManager::delEvent(int fd, Event event) {
   LockType::ReadLock lock(m_lock);
   if ((int)m_fdContexts.size() <= fd) { return false; }
-  
-   FdContext* fd_ctx = m_fdContexts[fd];
+
+  FdContext* fd_ctx = m_fdContexts[fd];
   lock.unlock();
 
   FdContext::LockType::Lock lock2(fd_ctx->lock);
@@ -250,16 +249,17 @@ bool IOManager::stopping() {
 }
 
 void IOManager::idle() {
-    LOG_DEBUG("idle");
-    const uint64_t MAX_EVNETS = 256;
-    epoll_event* events = new epoll_event[MAX_EVNETS]();
-    std::shared_ptr<epoll_event> shared_events(events, [](epoll_event* ptr){
-        delete[] ptr;
-    });
+  LOG_DEBUG("idle");
+  const uint64_t               MAX_EVNETS = 256;
+  epoll_event*                 events     = new epoll_event[MAX_EVNETS]();
+  std::shared_ptr<epoll_event> shared_events(events, [](epoll_event* ptr) { delete[] ptr; });
 
   while (true) {
     uint64_t next_timeout = 0;
-    if (stopping(next_timeout)) { LOG_INFO("name=%s idle stopping exit", getName().c_str()); }
+    if (stopping(next_timeout)) {
+      LOG_INFO("name=%s idle stopping exit", getName().c_str());
+      break;
+    }
 
     int rt = 0;
     do {
@@ -288,11 +288,12 @@ void IOManager::idle() {
       epoll_event& event = events[i];
       if (event.data.fd == m_tickleFds[0]) {
         uint8_t dummy;
-        while (read(m_tickleFds[0], &dummy, 1) > 0);
+        while (read(m_tickleFds[0], &dummy, 1) > 0)
+          ;
         continue;
       }
 
-      FdContext*                 fd_ctx = (FdContext*)event.data.ptr;
+      FdContext*                fd_ctx = (FdContext*)event.data.ptr;
       FdContext::LockType::Lock lock(fd_ctx->lock);
       if (event.events & (EPOLLERR | EPOLLHUP)) { event.events |= EPOLLIN | EPOLLOUT; }
       int real_events = NONE;

@@ -42,14 +42,15 @@ void test_ipv4() {
 }
 
 void test_ipv6() {
-  auto addr = IPAddress::Create("[::1]");
+  auto addr = IPAddress::Create("::1");
   if (addr) { LOG_INFO("%s", addr->to_string().c_str()); }
 }
 
 int main(int argc, char* argv[]) {
   // test_ipv4();
+  test_ipv6();
   // test_iface();
-  test();
+  // test();
 
   return 0;
 }

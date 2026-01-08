@@ -56,7 +56,8 @@ Fiber::Fiber(std::function<void()> cb, size_t stacksize, bool use_caller)
 Fiber::~Fiber() {
   --s_fiber_count;
   if (m_stack) {
-    ASSERT2(m_state == TERM || m_state == INIT || m_state == EXCEPT, "State=" + std::string(Fiber::to_string(this->getState())));
+    ASSERT2(m_state == TERM || m_state == INIT || m_state == EXCEPT,
+            "State=" + std::string(Fiber::to_string(this->getState())));
     free(m_stack);
   } else {
     ASSERT(!m_cb);
@@ -87,26 +88,28 @@ void Fiber::swapIn() {
   SetThis(this);
   ASSERT(m_state != EXEC);
   m_state = EXEC;
-  LOG_DEBUG("swapIn: fiber change run_fiber=%d, swap_fiber=%d", getId(), Scheduler::GetMainFiber()->getId());
+  // LOG_DEBUG("swapIn: fiber change run_fiber=%d, swap_fiber=%d", getId(),
+  // Scheduler::GetMainFiber()->getId());
   if (swapcontext(&Scheduler::GetMainFiber()->m_ctx, &m_ctx)) { ASSERT2(false, "swapcontext"); }
 }
 
 void Fiber::swapOut() {
   SetThis(Scheduler::GetMainFiber());
-  LOG_DEBUG("swapOut: fiber change run_fiber=%d, swap_fiber=%d", Scheduler::GetMainFiber()->getId(), getId());
+  // LOG_DEBUG("swapOut: fiber change run_fiber=%d, swap_fiber=%d",
+  // Scheduler::GetMainFiber()->getId(), getId());
   if (swapcontext(&m_ctx, &Scheduler::GetMainFiber()->m_ctx)) { ASSERT2(false, "swapcontext"); }
 }
 
 void Fiber::call() {
   SetThis(this);
   m_state = EXEC;
-  LOG_DEBUG("call: fiber change run_fiber=%d, swap_fiber=%d", getId(), t_threadFiber->getId());
+  // LOG_DEBUG("call: fiber change run_fiber=%d, swap_fiber=%d", getId(), t_threadFiber->getId());
   if (swapcontext(&t_threadFiber->m_ctx, &m_ctx)) { ASSERT2(false, "swapcontext"); }
 }
 
 void Fiber::back() {
   SetThis(t_threadFiber.get());
-  LOG_DEBUG("back: fiber change run_fiber=%d, swap_fiber=%d", t_threadFiber->getId(), getId());
+  // LOG_DEBUG("back: fiber change run_fiber=%d, swap_fiber=%d", t_threadFiber->getId(), getId());
   if (swapcontext(&m_ctx, &t_threadFiber->m_ctx)) { ASSERT2(false, "swapcontext"); }
 }
 

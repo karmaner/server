@@ -13,10 +13,7 @@ bool Timer::Comparator::operator()(const Timer::ptr& lhs, const Timer::ptr& rhs)
 }
 
 Timer::Timer(uint64_t ms, std::function<void()> cb, bool recurring, TimerManager* manager)
-    : m_recurring(recurring),
-    m_ms(ms),
-    m_cb(cb),
-    m_manager(manager) {
+    : m_recurring(recurring), m_ms(ms), m_cb(cb), m_manager(manager) {
   m_next = get_current_ms() + m_ms;
 }
 
@@ -78,13 +75,10 @@ Timer::ptr TimerManager::addTimer(uint64_t ms, std::function<void()> cb, bool re
 
 static void OnTimer(std::weak_ptr<void> weak_cond, std::function<void()> cb) {
   std::shared_ptr<void> tmp = weak_cond.lock();
-  if(tmp) {
-    cb();
-  }
+  if (tmp) { cb(); }
 }
-Timer::ptr TimerManager::addConditionTimer(uint64_t ms, std::function<void()> cb
-                                          ,std::weak_ptr<void> weak_cond
-                                          ,bool recurring) {
+Timer::ptr TimerManager::addConditionTimer(uint64_t ms, std::function<void()> cb,
+                                           std::weak_ptr<void> weak_cond, bool recurring) {
   return addTimer(ms, std::bind(&OnTimer, weak_cond, cb), recurring);
 }
 
@@ -145,7 +139,7 @@ void TimerManager::addTimer(Timer::ptr val, LockType::WriteLock& lock) {
 
 bool TimerManager::detectClockRollover(uint64_t now_ms) {
   bool rollover = false;
-  if (now_ms < m_previouseTime && now_ms < (m_previouseTime - 60 * 60 * 1000)) { rollover = true; }
+  if (now_ms < m_previouseTime && now_ms > (m_previouseTime - 60 * 60 * 1000)) { rollover = true; }
   m_previouseTime = now_ms;
   return rollover;
 }
