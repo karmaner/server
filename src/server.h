@@ -9,3 +9,4 @@
 #include "basic/thread.h"
 #include "basic/timer.h"
 #include "basic/utils.h"
+#include "basic/macro.h"
