@@ -19,7 +19,7 @@ Scheduler::Scheduler(size_t threads, const std::string& name, bool use_caller) :
     ASSERT(GetThis() == nullptr);
     t_scheduler = this;
 
-    m_rootFiber.reset(new Fiber(std::bind(&Scheduler::run, this)));
+    m_rootFiber.reset(new Fiber(std::bind(&Scheduler::run, this), 0, true));
     Thread::SetName(m_name);
 
     t_scheduler_fiber = m_rootFiber.get();
@@ -99,7 +99,9 @@ void Scheduler::stop() {
   for (auto& i : thrs) {
     LOG_INFO("show up");
     i->join();
-  }
+  };
+
+  LOG_INFO("Scheduler %s stop", m_name.c_str());
 }
 
 void Scheduler::setThis() {

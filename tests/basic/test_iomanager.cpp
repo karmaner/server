@@ -53,10 +53,8 @@ void       test_timer() {
       []() {
         static int i = 0;
         LOG_INFO("hello timer i=%d", i);
-        if (++i == 3) {
-          s_timer->reset(2000, true);
-          // s_timer->cancel();
-        }
+        if (++i == 3) { s_timer->reset(2000, true); }
+        if (i == 6) s_timer->cancel();
       },
       true);
 }
@@ -65,31 +63,23 @@ void test_condition_timer() {
   IOManager iom(2, "test_cond", false);
 
   auto               cond_obj = std::make_shared<int>(42);
-  std::weak_ptr<int> weak_cond(cond_obj);  // 弱引用
+  std::weak_ptr<int> weak_cond(cond_obj);
 
   auto timer = iom.addConditionTimer(
-      500,
+      100,
       [value = *cond_obj]() {
         LOG_INFO("Condition timer triggered, object value: %d", value);
+        LOG_INFO("call back");
       },
-      weak_cond,
-      true);
-
-  iom.schedule([]() {
-    sleep(2);
-    LOG_INFO("Main work done");
-  });
+      weak_cond, true);
 
   iom.addTimer(
       1500,
-      [cond_obj]() mutable {
+      [weak_cond, cond_obj, timer]() mutable {
         LOG_INFO("Destroying condition object");
-        cond_obj.reset();  // ✅ 正确销毁
+        timer->cancel();
       },
       false);
-  iom.addTimer(3000, [&iom]() { LOG_INFO("Test complete, stopping IOManager"); }, false);
-
-  iom.stop();
 }
 
 int main(int argc, char** argv) {
