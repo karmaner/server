@@ -1,5 +1,6 @@
 #include "basic/scheduler.h"
 
+#include "basic/hook.h"
 #include "basic/log.h"
 #include "basic/macro.h"
 #include "basic/utils.h"
@@ -85,7 +86,6 @@ void Scheduler::stop() {
 
   if (m_rootFiber) {
     if (!stopping()) {
-      LOG_INFO("error show up");
       m_rootFiber->call();
     }
   }
@@ -97,7 +97,6 @@ void Scheduler::stop() {
   }
 
   for (auto& i : thrs) {
-    LOG_INFO("show up");
     i->join();
   };
 
@@ -110,6 +109,7 @@ void Scheduler::setThis() {
 
 void Scheduler::run() {
   LOG_DEBUG("scheduler:%s run", m_name.c_str());
+  set_hook_enable(true);
   setThis();
   if (get_thread_id() != m_rootThread) { t_scheduler_fiber = Fiber::GetThis().get(); }
 

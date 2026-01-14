@@ -9,7 +9,6 @@
 #include "basic/fiber.h"
 #include "basic/iomanager.h"
 #include "basic/log.h"
-#include "basic/macro.h"
 
 namespace Basic {
 

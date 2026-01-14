@@ -2,8 +2,7 @@
 #include <iostream>
 #include <map>
 
-#include "basic/config.h"
-#include "basic/log.h"
+#include "server.h"
 
 using namespace Basic;
 

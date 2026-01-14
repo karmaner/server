@@ -60,7 +60,7 @@ bool Address::Lookup(std::vector<Address::ptr>& result, const std::string& host,
   std::string node;
   const char* service = nullptr;
 
-  if (!host.empty() && host[0] == '[') {
+  if (!host.empty() && host[0] == '[') {  // 匹配IPV6 格式为 [::1]:80
     const char* endipv6 = (const char*)memchr(host.c_str() + 1, ']', host.size() - 1);
     if (endipv6) {
       if (*(endipv6 + 1) == ':') { service = endipv6 + 2; }
@@ -68,7 +68,7 @@ bool Address::Lookup(std::vector<Address::ptr>& result, const std::string& host,
     }
   }
 
-  if (node.empty()) {
+  if (node.empty()) {  // 匹配ipv4 格式为 127.0.0.1:80
     service = (const char*)memchr(host.c_str(), ':', host.size());
     if (service) {
       if (!memchr(service + 1, ':', host.c_str() + host.size() - service - 1)) {
@@ -82,8 +82,8 @@ bool Address::Lookup(std::vector<Address::ptr>& result, const std::string& host,
 
   int error = getaddrinfo(node.c_str(), service, &hints, &results);
   if (error) {
-    LOG_ERROR("Address::Lookup getaddress(%s, %d, %d) err=%d errstr=%s", host.c_str(), family, type,
-              error, strerror(errno));
+    LOG_ERROR("Parser Error: %s, Address::Lookup getaddress(%s, %d, %d) err=%d errstr=%s",
+              host.c_str(), node.c_str(), family, type, error, strerror(errno));
 
     return false;
   }

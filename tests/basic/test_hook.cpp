@@ -4,22 +4,20 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "basic/hook.h"
-#include "basic/iomanager.h"
-#include "basic/log.h"
+#include "server.h"
 
 using namespace Basic;
 
 void test_sleep() {
   IOManager iom(1);
   iom.schedule([]() {
-    LOG_INFO("sleep 2");
-    sleep(2);
+    LOG_INFO("sleep 10");
+    sleep(10);
   });
 
   iom.schedule([]() {
-    LOG_INFO("sleep 3");
-    sleep(3);
+    LOG_INFO("sleep 5");
+    sleep(5);
   });
   LOG_INFO("test_sleep");
 }

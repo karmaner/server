@@ -1,5 +1,6 @@
 #pragma once
 
+#include "basic/address.h"
 #include "basic/config.h"
 #include "basic/fiber.h"
 #include "basic/iomanager.h"

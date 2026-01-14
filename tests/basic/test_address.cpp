@@ -1,17 +1,35 @@
+#include <sys/socket.h>
+
 #include <map>
 
-#include "basic/address.h"
-#include "basic/log.h"
+#include "server.h"
 
 using namespace Basic;
 
 void test() {
   std::vector<Address::ptr> addrs;
 
-  LOG_INFO("begin");
   bool v = Address::Lookup(addrs, "www.baidu.com");
-  LOG_INFO("end");
+  if (!v) {
+    LOG_ERROR("lookup fail");
+    return;
+  }
 
+  for (size_t i = 0; i < addrs.size(); ++i) {
+    LOG_INFO("%d - %s", i, addrs[i]->to_string().c_str());
+  }
+
+  v = Address::Lookup(addrs, "127.0.0.1:80");
+  if (!v) {
+    LOG_ERROR("lookup fail");
+    return;
+  }
+
+  for (size_t i = 0; i < addrs.size(); ++i) {
+    LOG_INFO("%d - %s", i, addrs[i]->to_string().c_str());
+  }
+
+  v = Address::Lookup(addrs, "[::1]:80");
   if (!v) {
     LOG_ERROR("lookup fail");
     return;
@@ -47,10 +65,10 @@ void test_ipv6() {
 }
 
 int main(int argc, char* argv[]) {
-  // test_ipv4();
+  test_ipv4();
   test_ipv6();
-  // test_iface();
-  // test();
+  test_iface();
+  test();
 
   return 0;
 }
