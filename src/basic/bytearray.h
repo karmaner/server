@@ -27,7 +27,7 @@ public:
   ByteArray(size_t base_size = 4096);
   ~ByteArray();
 
-  // write
+  // write Fixed固定长度
   void writeFint8(int8_t value);
   void writeFuint8(uint8_t value);
   void writeFint16(int16_t value);
@@ -101,8 +101,8 @@ public:
   bool isLittleEndian() const;
   void setIsLittleEndian(bool val);
 
-  std::string toString() const;
-  std::string toHexString() const;
+  std::string to_string() const;
+  std::string to_hex_string() const;
 
   // 只获取内容，不修改position
   uint64_t getReadBuffers(std::vector<iovec>& buffers, uint64_t len = ~0ull) const;

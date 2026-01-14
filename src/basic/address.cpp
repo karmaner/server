@@ -446,6 +446,10 @@ socklen_t UnixAddress::getAddrLen() const {
   return m_length;
 }
 
+void UnixAddress::setAddrLen(uint32_t v) {
+    m_length = v;
+}
+
 std::ostream& UnixAddress::insert(std::ostream& os) const {
   if (m_length > offsetof(sockaddr_un, sun_path) && m_addr.sun_path[0] == '\0') {
     return os << "\\0"

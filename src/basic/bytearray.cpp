@@ -341,6 +341,35 @@ void ByteArray::write(const void* buf, size_t size) {
   if (m_position > m_size) { m_size = m_position; }
 }
 
+void ByteArray::read(void* buf, size_t size) {
+  if(size > getReadSize()) {
+    throw std::out_of_range("not enough len");
+  }
+
+  size_t npos = m_position % m_baseSize;
+  size_t ncap = m_cur->size - npos;
+  size_t bpos = 0;
+  while(size > 0) {
+    if(ncap >= size) {
+      memcpy((char*)buf + bpos, m_cur->ptr + npos, size);
+      if(m_cur->size == (npos + size)) {
+        m_cur = m_cur->next;
+      }
+      m_position += size;
+      bpos += size;
+      size = 0;
+    } else {
+      memcpy((char*)buf + bpos, m_cur->ptr + npos, ncap);
+      m_position += ncap;
+      bpos += ncap;
+      size -= ncap;
+      m_cur = m_cur->next;
+      ncap = m_cur->size;
+      npos = 0;
+    }
+  }
+}
+
 void ByteArray::read(void* buf, size_t size, size_t position) const {
   if (size > (m_size - position)) { throw std::out_of_range("not enough len"); }
 
@@ -444,7 +473,7 @@ void ByteArray::addCapacity(size_t size) {
   if (old_cap == 0) { m_cur = first; }
 }
 
-std::string ByteArray::toString() const {
+std::string ByteArray::to_string() const {
   std::string str;
   str.resize(getReadSize());
   if (str.empty()) { return str; }
@@ -452,8 +481,8 @@ std::string ByteArray::toString() const {
   return str;
 }
 
-std::string ByteArray::toHexString() const {
-  std::string       str = toString();
+std::string ByteArray::to_hex_string() const {
+  std::string       str = to_string();
   std::stringstream ss;
 
   for (size_t i = 0; i < str.size(); ++i) {

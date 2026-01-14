@@ -64,7 +64,7 @@ void test() {
     ByteArray::ptr ba2(new ByteArray(base_len * 2));                          \
     ASSERT(ba2->readFromFile("/tmp/" #type "_" #len "-" #read_fun ".dat"));   \
     ba2->setPosition(0);                                                      \
-    ASSERT(ba->toString() == ba2->toString());                                \
+    ASSERT(ba->to_string() == ba2->to_string());                              \
     ASSERT(ba->getPosition() == 0);                                           \
     ASSERT(ba2->getPosition() == 0);                                          \
   }
