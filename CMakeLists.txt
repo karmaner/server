@@ -3,9 +3,11 @@ project(server LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON) 
 
 add_compile_options(-fstandalone-debug)
 message(STATUS "optional: -fstandalone-debug")
+
 
 set(BIN_DIR ${CMAKE_SOURCE_DIR}/bin)
 set(LIB_DIR ${CMAKE_SOURCE_DIR}/lib)
@@ -15,5 +17,9 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${LIB_DIR})
 
 add_subdirectory(3rd/yaml-cpp)
+
+find_package(OpenSSL REQUIRED)
+find_package(Threads REQUIRED)
+
 add_subdirectory(src)
 add_subdirectory(tests)

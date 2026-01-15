@@ -4,7 +4,6 @@
 #include <vector>
 
 #include "basic/mutex.h"
-#include "basic/thread.h"
 #include "basic/singletion.h"
 
 namespace Basic {

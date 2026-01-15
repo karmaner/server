@@ -3,8 +3,9 @@
 #include <memory>
 #include <set>
 #include <vector>
+#include <functional>
 
-#include "basic/thread.h"
+#include "basic/mutex.h"
 
 namespace Basic {
 
