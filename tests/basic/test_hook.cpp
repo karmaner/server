@@ -37,7 +37,7 @@ void test_sock() {
 
   if (rt) { return; }
 
-  const char data[] = "GET / HTTP/1.0\r\n\r\n";
+  const char data[] = "GET / HTTP/1.1\r\n\r\n";
   rt                = send(sock, data, sizeof(data), 0);
   LOG_INFO("send rt=%d errno=%d", rt, errno);
 

@@ -78,15 +78,6 @@ void test2() {
       break;
     }
 
-    // struct tcp_info tcp_info;
-    // if (!sock->getOption(IPPROTO_TCP, TCP_INFO, tcp_info)) {
-    //   LOG_INFO_STREAM << "err";
-    //   break;
-    // }
-    // if (tcp_info.tcpi_state != TCP_ESTABLISHED) {
-    //   LOG_INFO_STREAM << " state=" << (int)tcp_info.tcpi_state;
-    //   break;
-    // }
     static int batch = 10000000;
     if (i && (i % batch) == 0) {
       uint64_t ts2 = get_current_us();

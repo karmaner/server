@@ -14,10 +14,10 @@ void test_cast() {
   LOG_INFO("=== 基础类型转换测试 ===");
 
   // 字符串 -> 数值类型
-  int a = lexical_cast<std::string, int>("123");
+  int a = lexical_cast2<int>("123");
   LOG_INFO("string->int: '123' -> %d", a);
 
-  double b = lexical_cast<std::string, double>("3.14");
+  double b = lexical_cast2<double>("3.14");
   LOG_INFO("string->double: '3.14' -> %.2f", b);
 
   bool c = lexical_cast<std::string, bool>("1");
