@@ -5,6 +5,10 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/3rd/yaml-cpp/include/
 )
 
+message(STATUS "开始ragel运行")
+
+ragelmaker(http/http11_parser.rl http HTTP11_PARSER_OUT)
+ragelmaker(http/httpclient_parser.rl http HTTPCLIENT_PARSER_OUT)
 
 file(GLOB_RECURSE ALL_SOURCE_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/basic/*.cpp
@@ -15,7 +19,11 @@ file(GLOB_RECURSE ALL_SOURCE_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/http/*.h
 )
 
-add_library(server STATIC ${ALL_SOURCE_FILES})
+add_library(server STATIC 
+  ${ALL_SOURCE_FILES}
+  ${HTTP11_PARSER_OUT}
+  ${HTTPCLIENT_PARSER_OUT}
+)
 
 target_link_libraries(server
   PUBLIC
