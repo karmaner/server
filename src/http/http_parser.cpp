@@ -1,6 +1,7 @@
 #include "http/http_parser.h"
 
 #include <cstdint>
+#include <string>
 
 #include "basic/config.h"
 #include "basic/log.h"
@@ -66,8 +67,8 @@ static _RequestSizeIniter _init;
 
 void on_request_method(void* data, const char* at, size_t length) {
   HttpRequestParser* parser = static_cast<HttpRequestParser*>(data);
-
-  HttpMethod m = CharsToHttpMethod(at);
+  
+  HttpMethod m = CharsToHttpMethod(std::string(at, length).c_str());
 
   if (m == HttpMethod::INVALID_METHOD) {
     LOG_WARN_STREAM << "invalid http request method: " << std::string(at, length);

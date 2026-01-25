@@ -5,8 +5,6 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/3rd/yaml-cpp/include/
 )
 
-message(STATUS "开始ragel运行")
-
 ragelmaker(http/http11_parser.rl http HTTP11_PARSER_OUT)
 ragelmaker(http/httpclient_parser.rl http HTTPCLIENT_PARSER_OUT)
 

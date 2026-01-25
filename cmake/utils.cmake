@@ -4,15 +4,10 @@
 # outputlist : 用来汇总生成结果的变量名，用于 add_library/add_executable
 # outputdir  : 输出目录，通常为 ${CMAKE_CURRENT_BINARY_DIR}/generated 或类似路径
 function(ragelmaker src_rl outputdir output_var)
-  message(STATUS "进入函数")
-  message(STATUS "${src_rl}")
   # 提取文件名（不带路径，不带扩展名）
   get_filename_component(src_file ${src_rl} NAME_WE)
-
-  message(STATUS "${src_file}, ${outputdir}")
   # 生成输出文件完整路径，例如 generated/http.rl.cpp
   set(rl_out ${CMAKE_SOURCE_DIR}/src/${outputdir}/${src_file}.rl.cpp)
-  message(STATUS "${rl_out}")
   # 定义自定义命令用于生成 Ragel 的 C++ 源码
   add_custom_command(
     OUTPUT ${rl_out}
@@ -28,6 +23,5 @@ function(ragelmaker src_rl outputdir output_var)
   # 标记为自动生成文件，使 IDE 不报缺失
   set_source_files_properties(${rl_out} PROPERTIES GENERATED TRUE)
   set(${output_var} ${rl_out} PARENT_SCOPE)
-  message(STATUS "返回变量 ${output_var} = ${rl_out}")
 
 endfunction(ragelmaker)

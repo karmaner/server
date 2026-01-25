@@ -123,6 +123,7 @@
 
 #### HTTP PROTOCOL GRAMMAR
   CRLF = ( "\r\n" | "\n" ) ;
+  ws = ( " " | "\t" )+ ;
 
   # URI description as per RFC 3986.
 
@@ -219,7 +220,7 @@
 
   http_number = ( "1." ("0" | "1") ) ;
   HTTP_Version = ( "HTTP/" http_number ) >mark %http_version ;
-  Request_Line = ( Method " " URI_reference " " HTTP_Version CRLF ) ;
+  Request_Line = ( Method ws URI_reference ws HTTP_Version CRLF ) ;
 
   HTTP_CTL = (0 - 31) | 127 ;
   HTTP_separator = ( "(" | ")" | "<" | ">" | "@"
