@@ -15,6 +15,8 @@ file(GLOB_RECURSE ALL_SOURCE_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/http/*.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/http/*.c
   ${CMAKE_CURRENT_SOURCE_DIR}/http/*.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/stream/*.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/stream/*.cpp
 )
 
 add_library(server STATIC 

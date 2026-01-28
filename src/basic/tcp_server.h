@@ -37,7 +37,7 @@ protected:
   virtual void handleClient(Socket::ptr client);
   virtual void startAccept(Socket::ptr sock);
 
-private:
+protected:
   std::vector<Socket::ptr> m_socks;
   IOManager*               m_worker;
   IOManager*               m_ioWorker;
