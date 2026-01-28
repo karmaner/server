@@ -147,7 +147,7 @@
   segment_nz    = ( pchar+ ) ;
   segment       = ( pchar* ) ;
 
-  path_empty    = ( pchar{0} ) ;
+  path_empty    = "" ;
   path_rootless = ( segment_nz ( "/" segment )* ) ;
   path_noscheme = ( segment_nz_nc ( "/" segment )* ) ;
   path_absolute = ( "/" ( segment_nz ( "/" segment )* )? ) ;
