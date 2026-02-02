@@ -447,7 +447,7 @@ socklen_t UnixAddress::getAddrLen() const {
 }
 
 void UnixAddress::setAddrLen(uint32_t v) {
-    m_length = v;
+  m_length = v;
 }
 
 std::ostream& UnixAddress::insert(std::ostream& os) const {
@@ -482,6 +482,10 @@ socklen_t UnknownAddress::getAddrLen() const {
 std::ostream& UnknownAddress::insert(std::ostream& os) const {
   os << "[UnknownAddress family=" << m_addr.sa_family << "]";
   return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const Address& addr) {
+  return addr.insert(os);
 }
 
 }  // namespace Basic

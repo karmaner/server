@@ -7,8 +7,21 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(cmake/utils.cmake)
 
-add_compile_options(-fstandalone-debug)
-message(STATUS "optional: -fstandalone-debug")
+# 设置默认构建类型为 Debug（如果未指定）
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+endif()
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+
+# 调试编译选项（使用 _DEBUG 避免与代码中的 DEBUG 枚举冲突）
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 -D_DEBUG")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g -O0 -D_DEBUG")
+
+# Clang 专用选项（可选）
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-fstandalone-debug)
+  message(STATUS "Clang detected: -fstandalone-debug enabled")
+endif()
 
 
 set(BIN_DIR ${CMAKE_SOURCE_DIR}/bin)
