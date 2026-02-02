@@ -16,51 +16,69 @@ HttpResponse::ptr HttpConnection::recvResponse() {
   int                   offset = 0;
   do {
     int len = read(data + offset, buff_size - offset);
+    LOG_DEBUG_STREAM << "recvResponse: read header len=" << len;
     if (len <= 0) {
+      LOG_ERROR_STREAM << "recvResponse: read header failed, len=" << len << ", errno=" << errno;
       close();
       return nullptr;
     }
     len += offset;
     data[len]     = '\0';
     size_t nparse = parser->execute(data, len, false);
+    LOG_DEBUG_STREAM << "recvResponse: execute nparse=" << nparse << ", len=" << len;
     if (parser->hasError()) {
+      LOG_ERROR_STREAM << "recvResponse: parser error";
       close();
       return nullptr;
     }
     offset = len - nparse;
     if (offset == (int)buff_size) {
+      LOG_ERROR_STREAM << "recvResponse: buffer full";
       close();
       return nullptr;
     }
     if (parser->isFinished()) { break; }
   } while (true);
   auto& client_parser = parser->getParser();
+  LOG_INFO_STREAM << "recvResponse: header done, chunked=" << client_parser.chunked 
+                  << ", content_len=" << parser->getContentLength()
+                  << ", status=" << client_parser.status;
+  std::string body;
   if (client_parser.chunked) {
-    std::string body;
-    int         len = offset;
+    int len = offset;
+    LOG_DEBUG_STREAM << "recvResponse: start chunked, offset=" << offset;
     do {
+      bool begin = true;
       do {
-        int rt = read(data + len, buff_size - len);
-        if (rt <= 0) {
-          close();
-          return nullptr;
+        if (!begin || len == 0) {
+          int rt = read(data + len, buff_size - len);
+          LOG_DEBUG_STREAM << "recvResponse: read chunk rt=" << rt;
+          if (rt <= 0) {
+            LOG_ERROR_STREAM << "recvResponse: read chunk failed, rt=" << rt << ", errno=" << errno;
+            close();
+            return nullptr;
+          }
+          len += rt;
         }
-        len += rt;
+
         data[len]     = '\0';
         size_t nparse = parser->execute(data, len, true);
+        LOG_DEBUG_STREAM << "recvResponse: chunk execute nparse=" << nparse << ", len=" << len;
         if (parser->hasError()) {
+          LOG_ERROR_STREAM << "recvResponse: chunk parser error, data=" << std::string(data, std::min(len, 50));
           close();
           return nullptr;
         }
         len -= nparse;
         if (len == (int)buff_size) {
+          LOG_ERROR_STREAM << "recvResponse: chunk buffer full";
           close();
           return nullptr;
         }
+        begin = false;
       } while (!parser->isFinished());
-      len -= 2;
 
-      LOG_INFO_STREAM << "content_len=" << client_parser.content_len;
+      LOG_INFO_STREAM << "content_len=" << client_parser.content_len << ", chunks_done=" << client_parser.chunks_done;
       if (client_parser.content_len <= len) {
         body.append(data, client_parser.content_len);
         memmove(data, data + client_parser.content_len, len - client_parser.content_len);
@@ -71,6 +89,7 @@ HttpResponse::ptr HttpConnection::recvResponse() {
         while (left > 0) {
           int rt = read(data, left > (int)buff_size ? (int)buff_size : left);
           if (rt <= 0) {
+            LOG_ERROR_STREAM << "recvResponse: read chunk body failed, rt=" << rt;
             close();
             return nullptr;
           }
@@ -80,9 +99,11 @@ HttpResponse::ptr HttpConnection::recvResponse() {
         len = 0;
       }
     } while (!client_parser.chunks_done);
+    LOG_INFO_STREAM << "recvResponse: chunked done, body size=" << body.size();
     parser->getData()->setBody(body);
   } else {
     int64_t length = parser->getContentLength();
+    LOG_DEBUG_STREAM << "recvResponse: content-length mode, length=" << length;
     if (length > 0) {
       std::string body;
       body.resize(length);
@@ -98,6 +119,7 @@ HttpResponse::ptr HttpConnection::recvResponse() {
       length -= offset;
       if (length > 0) {
         if (readFixSize(&body[len], length) <= 0) {
+          LOG_ERROR_STREAM << "recvResponse: readFixSize failed";
           close();
           return nullptr;
         }
@@ -105,6 +127,8 @@ HttpResponse::ptr HttpConnection::recvResponse() {
       parser->getData()->setBody(body);
     }
   }
+
+  LOG_INFO_STREAM << "recvResponse: success";
   return parser->getData();
 }
 

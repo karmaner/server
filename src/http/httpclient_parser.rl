@@ -151,7 +151,8 @@
   chunk_ext_name = token+;
   chunk_extension = (";" chunk_ext_name >start_field %write_field %start_value ("=" chunk_ext_val >start_value)? %write_value )*;
   chunk_size = xdigit+;
-  Chunked_Header = chunk_size >mark %chunk_size chunk_extension :> CRLF;
+  # CRLF? 用于跳过 chunk data 后的 \r\n
+  Chunked_Header = CRLF? chunk_size >mark %chunk_size chunk_extension :> CRLF;
 
 main := (Response | Chunked_Header) @done;
 }%%
