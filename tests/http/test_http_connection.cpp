@@ -7,6 +7,19 @@
 
 using namespace http;
 
+void test_pool() {
+  http::HttpConnectionPool::ptr pool(
+      new http::HttpConnectionPool("www.baidu.com", "", 80, 10, 1000 * 30, 5));
+
+  IOManager::GetThis()->addTimer(
+      1000,
+      [pool]() {
+        auto r = pool->doGet("/", 300);
+        LOG_INFO_STREAM << r->to_string();
+      },
+      false);
+}
+
 void run() {
   Address::ptr addr = Address::LookupAnyIPAddress("www.example.com:80");
   if (!addr) {
@@ -38,6 +51,9 @@ void run() {
 
   std::ofstream ofs("rsp.dat");
   ofs << *rsp;
+
+  LOG_INFO("=============================");
+  test_pool();
 }
 
 int main(int argc, char* argv[]) {

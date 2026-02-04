@@ -29,7 +29,7 @@ void HttpServer::handleClient(Socket::ptr client) {
     HttpResponse::ptr rsp(new HttpResponse(req->getVersion(), req->isClose() || !m_isKeepalive));
     rsp->setHeader("Server", getName());
     m_dispatch->handle(req, rsp, session);
-    rsp->setBody("hello server");
+    rsp->setBody("Hello server");
 
     LOG_WARN_STREAM << "requst:" << std::endl << *req;
     LOG_WARN_STREAM << "response:" << std::endl << *rsp;

@@ -136,7 +136,7 @@
 
   pct_encoded   = ( "%" xdigit xdigit ) ;
 
-  pchar         = ( unreserved | pct_encoded | sub_delims | ":" | "@" ) ;
+  pchar         = ( (any -- ascii) | unreserved | pct_encoded | sub_delims | ":" | "@" ) ;
 
   fragment      = ( ( pchar | "/" | "?" )* ) >mark %fragment ;
 
