@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "basic/mutex.h"
-#include "basic/singletion.h"
+#include "basic/singleton.h"
 #include "basic/utils.h"
 
 #define LOG_ROOT Basic::LogMgr::GetInstance()->getRoot()
